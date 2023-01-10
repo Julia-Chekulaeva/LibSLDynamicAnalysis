@@ -1,0 +1,10 @@
+name: bot-j-Run-Tests-With-Logs
+run-name: bot-j-Run-Tests-With-Logs
+on: [push]
+jobs:
+  Gradle-Run-Tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@HEAD
+      - run: gradle build
