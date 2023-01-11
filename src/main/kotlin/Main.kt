@@ -7,8 +7,6 @@ const val propertyFileName = "C:/Users/cat_p/bot-j.github"
 
 fun main(args: Array<String>) {
     val libSL = LibSL(lslPath).loadFromFileName(lslFileName)
-
-    val libName = "com.github.sealedtx:java-youtube-downloader" //libSL.library.metadata.name
-
-    GithubAccess(propertyFileName).checkRepos(libName)
+    val libName = "com.github.sealedtx:java-youtube-downloader"
+    GithubAccess(propertyFileName).analyseDataFromRepos(libName)
 }
