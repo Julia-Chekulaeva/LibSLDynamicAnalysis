@@ -6,14 +6,16 @@ import java.io.File
 
 
 const val gitHubActionsFile = ".github/workflows/bot-j-run-tests-with-logs.yml"
-const val workflowName = "bot-j-Run-Tests-With-Logs"
+const val logsDirPath = "src/main/resources/logs"
+const val workflowName = "bot-j-Run-Instrumented-Tests-With-Logs"
 const val qLanguage = "gradle"
 const val qSize = "<700"
 const val timeLimitMillis = 60_000
 const val timeStepMillis = 5000L
-const val threadsCount = 4
 
 class GithubAccess(propertyFileName: String) {
+
+    private val forkedRepos = mutableListOf<GHRepository>()
 
     private val gitHub: GitHub = GitHubBuilder.fromPropertyFile(propertyFileName).build()
 
@@ -23,67 +25,98 @@ class GithubAccess(propertyFileName: String) {
         gitHub.myself.allRepositories.values.forEach { it.delete() }
     }
 
-    fun checkRepos(libName: String) {
+    fun analyseDataFromRepos(libName: String) {
+        try {
+            searchForkAndEditRepos(libName)
+            checkJobsStatusesAndLoadLogs()
+        } catch (e: Exception) {
+            throw e
+        } finally {
+            deleteForkedRepos()
+        }
+    }
+
+    private fun deleteForkedRepos() {
+        forkedRepos.forEach { it.delete() }
+        forkedRepos.clear()
+    }
+
+    private fun searchForkAndEditRepos(libName: String) {
         println("\n${gitHub.myself}\n")
-        cleanRepos()
         val repos = mutableSetOf<GHRepository>()
         val searchResult = gitHub.searchContent().q(libName).language(qLanguage).size(qSize).list()
         for (ghContent in searchResult) {
             repos.add(ghContent.owner)
         }
-        val threads = MutableList(threadsCount) { Thread() }
-        for ((index, repo) in repos.withIndex()) {
-            while (threads[index % threadsCount].isAlive) {
-                Thread.sleep(timeStepMillis)
-            }
-            threads[index % threadsCount] = Thread {
-                println("Thread $index started")
-                processRepo(repo)
-                println("Thread $index finished")
-            }
-            threads[index % threadsCount].start()
+        for (repo in repos) {
+            forkAndEditRepo(repo)
         }
     }
 
-    fun processRepo(repo: GHRepository) {
+    private fun checkJobsStatusesAndLoadLogs() {
+        val startTime = System.currentTimeMillis()
+        while (
+            System.currentTimeMillis() - startTime <= timeLimitMillis
+            && forkedRepos.map { checkJobStatusAndLoadLogs(it) }.any { !it }
+        ) {
+            forkedRepos.removeIf { it.isArchived }
+            Thread.sleep(timeStepMillis)
+        }
+        forkedRepos.removeIf { it.isArchived }
+    }
+
+    fun forkAndEditRepo(repo: GHRepository) {
+        gitHub.myself.allRepositories.filter { it.key == repo.name }.forEach { existingRepo ->
+            var i = 1
+            while (gitHub.myself.allRepositories.filter { it.key == "${repo.name}-$i" }.isNotEmpty()) {
+                i++
+            }
+            existingRepo.value.renameTo("${repo.name}-$i")
+            Thread.sleep(timeStepMillis)
+            println("""Repo ${repo.name} is renamed to ${repo.name}-$i
+                |""".trimMargin())
+        }
         repo.fork()
         val myRepo = gitHub.myself.getRepository(repo.name)
-        println("${repo.htmlUrl}\nForked: ${myRepo.htmlUrl}\n")
-        try {
-            processForkedRepo(myRepo)
-        } catch (e: Exception) {
-            throw e
-        } finally {
-            myRepo.delete()
-        }
+        println("""${repo.htmlUrl}
+            |Forked: ${myRepo.htmlUrl}
+            |""".trimMargin())
+        forkedRepos.add(myRepo)
+        editForkedRepo(myRepo)
     }
 
-    private fun processForkedRepo(myRepo: GHRepository) {
+    private fun editForkedRepo(myRepo: GHRepository) {
         val file = File(gitHubActionsFile)
         myRepo.createContent().content(file.readText()).path(gitHubActionsFile)
             .message("Add $gitHubActionsFile file").commit()
-        val startTime = System.currentTimeMillis()
-        var jobs = myRepo.listWorkflows().toList().filter { it.name == workflowName }.map { it.listRuns() }
-        while (jobs.isEmpty() || jobs.first().toList().isEmpty()) {
-            Thread.sleep(timeStepMillis)
-            jobs = myRepo.listWorkflows().toList().filter { it.name == workflowName }.map {
-                it.enable()
-                it.listRuns()
+        myRepo.listWorkflows().forEach { it.enable() }
+    }
+
+    private fun checkJobStatusAndLoadLogs(myRepo: GHRepository): Boolean {
+        val workflows = myRepo.listWorkflows().toList().filter { it.name == workflowName }
+        if (workflows.isEmpty())
+            return false
+
+        workflows.first().listRuns().toList().forEach { run ->
+            println("""${run.htmlUrl}
+                |job: ${run.name}
+                |status: ${run.status.name} (${run.conclusion?.name})
+                |Logs: ${run.logsUrl}
+                |""".trimMargin())
+            if (run.status != GHWorkflowRun.Status.COMPLETED)
+                return false
+            myRepo.enableDownloads(true)
+            if (run.conclusion == GHWorkflowRun.Conclusion.SUCCESS) {
+                run.listJobs().toList().forEach { job ->
+                    job.downloadLogs {
+                        it.transferTo(File("$logsDirPath/log_repo_${myRepo.name}_job_${job.name}.txt").outputStream())
+                    }
+                }
             }
+            myRepo.archive()
+            myRepo.delete()
+            return true
         }
-        jobs.first().forEach {
-            if (it.name != workflowName)
-                return@forEach
-            while (
-                it.status != GHWorkflowRun.Status.COMPLETED
-                && System.currentTimeMillis() - startTime < timeLimitMillis
-            ) {
-                Thread.sleep(timeStepMillis)
-            }
-            println("${it.htmlUrl} - status: ${it.status.name}, name: ${it.name}")
-            if (it.status.ordinal == 0) {
-                println("Logs: ${it.logsUrl}")
-            }
-        }
+        return false
     }
 }

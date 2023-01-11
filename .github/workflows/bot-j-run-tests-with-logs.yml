@@ -1,5 +1,5 @@
-name: bot-j-Run-Tests-With-Logs
-run-name: bot-j-Run-Tests-With-Logs
+name: bot-j-Run-Instrumented-Tests-With-Logs
+run-name: bot-j-Run-Instrumented-Tests-With-Logs
 on: [push]
 jobs:
   Gradle-Run-Tests:

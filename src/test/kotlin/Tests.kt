@@ -6,14 +6,12 @@ class Tests {
 
     @Test
     fun processRepoTest() {
-        val libMethods = listOf("registerBot", "setChatId")
         val githubAccess = GithubAccess(propertyFileName)
         val gitHub = githubAccess.getGitHub()
         println(gitHub.myself)
         githubAccess.cleanRepos()
         val botRepo = gitHub.getRepository("Julia-Chekulaeva/YouTubeGifAndSoundBot")
-        githubAccess.processRepo(botRepo)
-        TODO()
+        githubAccess.forkAndEditRepo(botRepo)
     }
 
     @Test
