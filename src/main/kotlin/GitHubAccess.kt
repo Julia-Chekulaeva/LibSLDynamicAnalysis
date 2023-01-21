@@ -57,7 +57,7 @@ class GitHubAccess(propertyFileName: String) {
                 if (searchContent.totalCount != filesCount)
                     step = 1
                 else
-                    step++
+                    step *= 2
                 filesCount = searchContent.totalCount
             }
         } catch (e: Exception) {
