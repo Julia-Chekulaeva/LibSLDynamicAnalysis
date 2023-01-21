@@ -1,3 +1,4 @@
+import libUsage.example2.example
 import org.jetbrains.research.libsl.LibSL
 import java.io.File
 
@@ -7,9 +8,11 @@ const val lslFileName = "lslFile.lsl"
 const val propertyFileName = "C:/Users/cat_p/bot-j.github"
 
 fun main(args: Array<String>) {
-    val libSL = LibSL(lslPath).loadFromFileName(lslFileName)
-    val libName = "com.github.sealedtx:java-youtube-downloader"
-    GitHubAccess(propertyFileName).analyseDataFromRepos(libName)
+    val library = LibSL(lslPath).loadFromFileName(lslFileName)
+    val libName = "rjohnsondev:java-libpst:0.9.4"
+    changeFile("src/main/kotlin/libUsage/example/UsageExample.kt", library)
+    example()
+    //GitHubAccess(propertyFileName).analyseDataFromRepos(libName)
     clearLogs()
 }
 
