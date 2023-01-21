@@ -54,7 +54,7 @@ class GitHubAccess(propertyFileName: String) {
                 val searchContent = searchContent(libName, size)
                 println("File size: $size\tFiles found: ${searchContent.totalCount}")
                 searchResult = searchContent.toList()
-                if (searchContent.totalCount == filesCount)
+                if (searchContent.totalCount != filesCount)
                     step = 1
                 else
                     step++
