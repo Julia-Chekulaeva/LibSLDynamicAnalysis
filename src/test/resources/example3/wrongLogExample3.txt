@@ -1,0 +1,5 @@
+METHOD_CALL; class_name: codeExamples.example3.libExample.Class1; method_name: f1; parameters: (); return_type: Unit; object_id: 655381473; time: 1686761711839;
+METHOD_CALL; class_name: codeExamples.example3.libExample.Class1; method_name: f2; parameters: (); return_type: Unit; object_id: 655381473; time: 1686761711960;
+METHOD_CALL; class_name: codeExamples.example3.libExample.Class1; method_name: f2; parameters: (); return_type: Unit; object_id: 242355057; time: 1686761711965;
+METHOD_CALL; class_name: codeExamples.example3.libExample.Class1; method_name: f3; parameters: (); return_type: Unit; object_id: 333333333; time: 1686761711968;
+METHOD_CALL; class_name: codeExamples.example3.libExample.Class1; method_name: f2; parameters: (); return_type: Unit; object_id: 333333333; time: 1686761711974;
