@@ -14,10 +14,15 @@ repositories {
 }
 
 dependencies {
-    implementation("org.kohsuke:github-api:1.313")
+    implementation("org.kohsuke:github-api:1.314")
     implementation("com.github.vldF:libsl:v1.1.0-RC")
-    implementation("org.ejml:ejml-all:0.41.1")
     testImplementation(kotlin("test"))
+}
+
+dependencies {
+    implementation("org.jboss.forge.roaster:roaster-jdt:2.28.0.Final")
+    implementation("org.ejml:ejml-all:0.42")
+    implementation("org.openjfx:javafx-base:19.0.2.1")
 }
 
 tasks.test {

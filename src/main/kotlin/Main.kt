@@ -1,20 +1,33 @@
-import org.jetbrains.research.libsl.LibSL
-import java.io.File
+import githubSearch.GitHubAccess
+import org.kohsuke.github.GitHub
+import javax.swing.ImageIcon
 
 
-const val lslPath = "src/main/resources"
-const val lslFileName = "lslFile.lsl"
-const val propertyFileName = "C:/Users/cat_p/bot-j.github"
+const val propertyFileName = "C:/Users/student/github/bot-j.github"
 
-fun main(args: Array<String>) {
-    val library = LibSL(lslPath).loadFromFileName(lslFileName)
-    val libName = "sealedtx/java-youtube-downloader"
-    //changeFile("src/main/kotlin/libUsage/example/UsageExample.kt", library)
-    //example()
-    GitHubAccess(propertyFileName).analyseDataFromRepos(libName)
-    clearLogs()
+fun main() {
+    val libName = "org.openjfx:javafx-base"
+    val gitHubAccess = GitHubAccess(propertyFileName)
+    gitHubAccess.analyseDataFromRepos(libName)
+    gitHubAccess.clearLogs()
+    ImageIcon("")
 }
 
-private fun clearLogs() {
-    File(logsDirPath).listFiles()?.forEach { it.delete() }
+fun testForks(github: GitHub) {
+    github.searchRepositories().q("KotlinAsFirst2019").list().forEach {
+        println("Repo ${it.fullName}")
+        if (it.isFork && it.source.listCommits() == it.listCommits())
+            return
+        if (it.isFork)
+            println("Repo ${it.fullName} is a fork, source repo: ${it.source.fullName}, parent repo: ${
+                it.source.fullName
+            }")
+        try {
+            it.fork()
+            println("Repo ${it.fullName} is forked")
+        } catch (e: Exception) {
+            println(e.localizedMessage)
+            e.printStackTrace()
+        }
+    }
 }

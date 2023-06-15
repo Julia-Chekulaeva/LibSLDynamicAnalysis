@@ -1,9 +1,17 @@
+package githubSearch
+
+import instrumentStatic.modifyCode
 import org.kohsuke.github.*
 import java.io.File
 
 
-const val gitHubActionsFile = ".github/workflows/bot-j-run-tests-with-logs.yml"
-const val logsDirPath = "src/main/resources/logs"
+const val dotGitHubDir = ".github"
+const val workflowsDir = "workflows"
+const val gitHubWorkflows = "$dotGitHubDir/$workflowsDir"
+const val actionsFileName = "bot-j-run-tests-with-logs.yml"
+const val gitHubActionsFile = "$gitHubWorkflows/$actionsFileName"
+const val resourcesPath = "src/main/resources"
+const val logsDirPath = "$resourcesPath/logs"
 const val workflowName = "bot-j-Run-Instrumented-Tests-With-Logs"
 const val qLanguage = "gradle"
 const val timeLimitMillis = 60_000
@@ -46,23 +54,35 @@ class GitHubAccess(propertyFileName: String) {
         val repos = mutableSetOf<GHRepository>()
         var size = 0
         var step = 1
+        val maxStepsWithoutIncrement = 20
         var searchResult = searchContent(libName, size).toList()
-        var filesCount = searchResult.size
-            try {
+        var stepsWithoutIncrement = 0
+        try {
             while (true) {
+                val prevFilesFound = searchResult.size
                 size += step
+                Thread.sleep(1000L)
                 val searchContent = searchContent(libName, size)
                 println("File size: $size\tFiles found: ${searchContent.totalCount}")
                 searchResult = searchContent.toList()
-                if (searchContent.totalCount != filesCount)
-                    step = 1
-                else
-                    step *= 2
-                filesCount = searchContent.totalCount
+                if (searchResult.size > prevFilesFound)
+                    stepsWithoutIncrement = 0
+                else if (searchResult.size == prevFilesFound)
+                    stepsWithoutIncrement++
+                else {
+                    size -= step
+                    val prevSearchContent = searchContent(libName, size)
+                    println("File size: $size\tFiles found: ${prevSearchContent.totalCount}")
+                    searchResult = prevSearchContent.toList()
+                    throw Exception("File size started to decrease")
+                }
+                if (stepsWithoutIncrement >= maxStepsWithoutIncrement)
+                    throw Exception("No more files found on last $stepsWithoutIncrement steps")
+                step = size
             }
         } catch (e: Exception) {
             println(e.localizedMessage)
-            println("""Found files count: $filesCount
+            println("""Found files count: ${searchResult.size}
                 |""".trimMargin())
         }
         for (ghContent in searchResult) {
@@ -106,10 +126,34 @@ class GitHubAccess(propertyFileName: String) {
     }
 
     private fun editForkedRepo(myRepo: GHRepository) {
-        val file = File(gitHubActionsFile)
-        myRepo.createContent().content(file.readText()).path(gitHubActionsFile)
-            .message("Add $gitHubActionsFile file").commit()
+        editSourceCodeFiles(myRepo)
+        val ghActionsFile = File("$resourcesPath/$gitHubActionsFile")
+        var index = 0
+        var actionsFileName = gitHubActionsFile
+        if (
+            myRepo.getDirectoryContent("").any { it.name == dotGitHubDir } &&
+            myRepo.getDirectoryContent(dotGitHubDir).any { it.name == workflowsDir }
+        ) {
+            while (myRepo.getDirectoryContent(gitHubWorkflows).any { it.name == actionsFileName }) {
+                actionsFileName = gitHubActionsFile.replace(".yml", "$index.yml")
+                index++
+            }
+        }
+        myRepo.createContent().content(ghActionsFile.readText()).path(actionsFileName)
+            .message("Add $actionsFileName file").commit()
         myRepo.listWorkflows().forEach { it.enable() }
+    }
+
+    private fun editSourceCodeFiles(myRepo: GHRepository) {
+        val files = myRepo.getDirectoryContent("").toMutableList()
+        while (files.isNotEmpty()) {
+            val file = files.removeAt(0)
+            if (file.isDirectory) {
+                files.addAll((myRepo.getDirectoryContent(file.path).toMutableList()))
+            } else if (file.name.endsWith(".java")) {
+                file.update(modifyCode(file.read().toString()), "Modify ${file.path} file")
+            }
+        }
     }
 
     private fun checkJobStatusAndLoadLogs(myRepo: GHRepository): Boolean {
@@ -138,5 +182,9 @@ class GitHubAccess(propertyFileName: String) {
             return true
         }
         return false
+    }
+
+    fun clearLogs() {
+        File(logsDirPath).listFiles()?.forEach { it.delete() }
     }
 }
