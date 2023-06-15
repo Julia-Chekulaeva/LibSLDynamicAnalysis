@@ -126,7 +126,7 @@ class GitHubAccess(propertyFileName: String) {
     }
 
     private fun editForkedRepo(myRepo: GHRepository) {
-        editSourceCodeFiles(myRepo)
+        sourceCodeFilesDynamicInstrumentation(myRepo)
         val ghActionsFile = File("$resourcesPath/$gitHubActionsFile")
         var index = 0
         var actionsFileName = gitHubActionsFile
@@ -144,7 +144,7 @@ class GitHubAccess(propertyFileName: String) {
         myRepo.listWorkflows().forEach { it.enable() }
     }
 
-    private fun editSourceCodeFiles(myRepo: GHRepository) {
+    private fun sourceCodeFilesStaticInstrumentation(myRepo: GHRepository) {
         val files = myRepo.getDirectoryContent("").toMutableList()
         while (files.isNotEmpty()) {
             val file = files.removeAt(0)
@@ -153,6 +153,17 @@ class GitHubAccess(propertyFileName: String) {
             } else if (file.name.endsWith(".java")) {
                 file.update(modifyCode(file.read().toString()), "Modify ${file.path} file")
             }
+        }
+    }
+
+    private fun sourceCodeFilesDynamicInstrumentation(myRepo: GHRepository) {
+        val path = "${File.pathSeparator}libsl${File.pathSeparator}instrumentation${File.pathSeparator}dynamic"
+        val pathForGithub = "src${File.pathSeparator}main${File.pathSeparator}kotlin$path"
+        val localFiles = File("$resourcesPath$path").listFiles()
+        for (file in localFiles!!) {
+            val fullFileName = "$pathForGithub${File.pathSeparator}${file.name}"
+            myRepo.createContent().content(file.readText()).path(fullFileName)
+                .message("Add $fullFileName file").commit()
         }
     }
 

@@ -1,4 +1,4 @@
-package instrumentation.dynamic
+package libsl.instrumentation.dynamic
 
 import java.lang.instrument.Instrumentation
 

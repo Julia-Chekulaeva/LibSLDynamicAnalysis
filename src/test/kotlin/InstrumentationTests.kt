@@ -28,7 +28,7 @@ class InstrumentationTests {
         )
         kotlinInstrumentation.replaceStringInFileAndCopyToAnotherFile(
             File("src/main/resources/instrumentation/Logger.kt"), fileLogger,
-            "instrumentation/static", "codeExamples.example$exampleIndex.libExample_modified"
+            "libsl.instrumentation/static", "codeExamples.example$exampleIndex.libExample_modified"
         )
         kotlinInstrumentation.replaceStringInFileAndCopyToAnotherFile(
             fileLogger, fileLogger, "example/logExample", "example$exampleIndex/logExample$exampleIndex"
