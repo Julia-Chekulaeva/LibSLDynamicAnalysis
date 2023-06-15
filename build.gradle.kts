@@ -16,6 +16,7 @@ repositories {
 dependencies {
     implementation("org.kohsuke:github-api:1.313")
     implementation("com.github.vldF:libsl:v1.1.0-RC")
+    implementation("org.ejml:ejml-all:0.41.1")
     testImplementation(kotlin("test"))
 }
 

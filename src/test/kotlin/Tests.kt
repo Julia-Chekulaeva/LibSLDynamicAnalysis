@@ -6,7 +6,7 @@ class Tests {
 
     @Test
     fun processRepoTest() {
-        val githubAccess = GithubAccess(propertyFileName)
+        val githubAccess = GitHubAccess(propertyFileName)
         val gitHub = githubAccess.getGitHub()
         println(gitHub.myself)
         githubAccess.cleanRepos()
@@ -16,7 +16,7 @@ class Tests {
 
     @Test
     fun cleanReposTest() {
-        val githubAccess = GithubAccess(propertyFileName)
+        val githubAccess = GitHubAccess(propertyFileName)
         val gitHub = githubAccess.getGitHub()
         githubAccess.cleanRepos()
         assert(gitHub.myself.allRepositories.isEmpty())

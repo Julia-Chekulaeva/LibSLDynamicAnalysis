@@ -1,7 +1,4 @@
-import org.kohsuke.github.GHRepository
-import org.kohsuke.github.GHWorkflowRun
-import org.kohsuke.github.GitHub
-import org.kohsuke.github.GitHubBuilder
+import org.kohsuke.github.*
 import java.io.File
 
 
@@ -9,11 +6,10 @@ const val gitHubActionsFile = ".github/workflows/bot-j-run-tests-with-logs.yml"
 const val logsDirPath = "src/main/resources/logs"
 const val workflowName = "bot-j-Run-Instrumented-Tests-With-Logs"
 const val qLanguage = "gradle"
-const val qSize = "<700"
 const val timeLimitMillis = 60_000
 const val timeStepMillis = 5000L
 
-class GithubAccess(propertyFileName: String) {
+class GitHubAccess(propertyFileName: String) {
 
     private val forkedRepos = mutableListOf<GHRepository>()
 
@@ -41,10 +37,34 @@ class GithubAccess(propertyFileName: String) {
         forkedRepos.clear()
     }
 
+    private fun searchContent(libName: String, size: Int) =
+        gitHub.searchContent().q(libName).size("<$size").language(qLanguage).list()
+
     private fun searchForkAndEditRepos(libName: String) {
-        println("\n${gitHub.myself}\n")
+        println("""Myself: ${gitHub.myself.htmlUrl}
+            |""".trimMargin())
         val repos = mutableSetOf<GHRepository>()
-        val searchResult = gitHub.searchContent().q(libName).language(qLanguage).size(qSize).list()
+        var size = 0
+        var step = 1
+        var searchResult = searchContent(libName, size).toList()
+        var filesCount = searchResult.size
+            try {
+            while (true) {
+                size += step
+                val searchContent = searchContent(libName, size)
+                println("File size: $size\tFiles found: ${searchContent.totalCount}")
+                searchResult = searchContent.toList()
+                if (searchContent.totalCount != filesCount)
+                    step = 1
+                else
+                    step *= 2
+                filesCount = searchContent.totalCount
+            }
+        } catch (e: Exception) {
+            println(e.localizedMessage)
+            println("""Found files count: $filesCount
+                |""".trimMargin())
+        }
         for (ghContent in searchResult) {
             repos.add(ghContent.owner)
         }
