@@ -16,6 +16,7 @@ const val workflowName = "bot-j-Run-Instrumented-Tests-With-Logs"
 const val qLanguage = "gradle"
 const val timeLimitMillis = 60_000
 const val timeStepMillis = 5000L
+const val libNameToReplace = "new-lib-name-must-be-replaced"
 
 class GitHubAccess(propertyFileName: String) {
 
@@ -162,8 +163,9 @@ class GitHubAccess(propertyFileName: String) {
         val localFiles = File("$resourcesPath$path").listFiles()
         for (file in localFiles!!) {
             val fullFileName = "$pathForGithub${File.pathSeparator}${file.name}"
-            myRepo.createContent().content(file.readText()).path(fullFileName)
-                .message("Add $fullFileName file").commit()
+            myRepo.createContent().content(file.readText().replace(
+                libNameToReplace, ""
+            )).path(fullFileName).message("Add $fullFileName file").commit()
         }
     }
 

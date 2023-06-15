@@ -6,7 +6,7 @@ import javax.swing.ImageIcon
 const val propertyFileName = "C:/Users/student/github/bot-j.github"
 
 fun main() {
-    val libName = "org.openjfx:javafx-base"
+    val libName = "com.google.guava:guava"
     val gitHubAccess = GitHubAccess(propertyFileName)
     gitHubAccess.analyseDataFromRepos(libName)
     gitHubAccess.clearLogs()
