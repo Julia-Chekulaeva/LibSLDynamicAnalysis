@@ -1,4 +1,4 @@
-package instrumentation
+package libsl.instrumentation.static.kt
 
 import java.io.File
 import java.util.logging.Logger

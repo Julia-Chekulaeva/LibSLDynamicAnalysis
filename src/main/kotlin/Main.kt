@@ -1,16 +1,14 @@
 import githubSearch.GitHubAccess
 import org.kohsuke.github.GitHub
-import javax.swing.ImageIcon
 
 
 const val propertyFileName = "C:/Users/student/github/bot-j.github"
 
 fun main() {
-    val libName = "com.google.guava:guava"
+    val libName = "org.yaml:snakeyaml:2.0"
     val gitHubAccess = GitHubAccess(propertyFileName)
     gitHubAccess.analyseDataFromRepos(libName)
     gitHubAccess.clearLogs()
-    ImageIcon("")
 }
 
 fun testForks(github: GitHub) {

@@ -1,7 +1,7 @@
-package codeExamples.example2.libUsage
+package codeExamples.libUsages.example2
 
-import codeExamples.example2.libExample.Class1
-import codeExamples.example2.libExample.Class2
+import codeExamples.libExamples.example2.Class1
+import codeExamples.libExamples.example2.Class2
 
 fun use1(n: Int) {
     val inst1 = Class1("inst1")

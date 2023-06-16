@@ -1,8 +1,8 @@
-METHOD_CALL; class_name: codeExamples.example2.libExample.Class1; method_name: getS; parameters: (); return_type: String; object_id: 712025048; time: 1686756712041;
-METHOD_CALL; class_name: codeExamples.example2.libExample.Class1; method_name: writeIToS; parameters: (); return_type: String; object_id: 1694556038; time: 1686756712042;
-METHOD_CALL; class_name: codeExamples.example2.libExample.Class1; method_name: incrementI; parameters: (); return_type: kotlin.Unit; object_id: 949057310; time: 1686756712043;
-METHOD_CALL; class_name: codeExamples.example2.libExample.Class1; method_name: getS; parameters: (); return_type: String; object_id: 949057310; time: 1686756713030;
-METHOD_CALL; class_name: codeExamples.example2.libExample.Class1; method_name: getS; parameters: (); return_type: String; object_id: 949057311; time: 1686756713043;
-METHOD_CALL; class_name: codeExamples.example2.libExample.Class1; method_name: setIToNull; parameters: (); return_type: codeExamples.example2.libExample.Class1; object_id: 949057311; time: 1686756714044;
-METHOD_CALL; class_name: codeExamples.example2.libExample.Class1; method_name: incrementI; parameters: (value: Int = 8); return_type: kotlin.Unit; object_id: 949057311; time: 1686756715045;
-METHOD_CALL; class_name: codeExamples.example2.libExample.Class1; method_name: writeIToS; parameters: (); return_type: String; object_id: 1694556038; time: 1686756716046;
+METHOD_CALL; class_name: codeExamples.libExamples.example2.Class1; method_name: getS; parameters: (); return_type: String; object_id: 712025048; time: 1686756712041;
+METHOD_CALL; class_name: codeExamples.libExamples.example2.Class1; method_name: writeIToS; parameters: (); return_type: String; object_id: 1694556038; time: 1686756712042;
+METHOD_CALL; class_name: codeExamples.libExamples.example2.Class1; method_name: incrementI; parameters: (); return_type: kotlin.Unit; object_id: 949057310; time: 1686756712043;
+METHOD_CALL; class_name: codeExamples.libExamples.example2.Class1; method_name: getS; parameters: (); return_type: String; object_id: 949057310; time: 1686756713030;
+METHOD_CALL; class_name: codeExamples.libExamples.example2.Class1; method_name: getS; parameters: (); return_type: String; object_id: 949057311; time: 1686756713043;
+METHOD_CALL; class_name: codeExamples.libExamples.example2.Class1; method_name: setIToNull; parameters: (); return_type: codeExamples.libExamples.example2.Class1; object_id: 949057311; time: 1686756714044;
+METHOD_CALL; class_name: codeExamples.libExamples.example2.Class1; method_name: incrementI; parameters: (value: Int = 8); return_type: kotlin.Unit; object_id: 949057311; time: 1686756715045;
+METHOD_CALL; class_name: codeExamples.libExamples.example2.Class1; method_name: writeIToS; parameters: (); return_type: String; object_id: 1694556038; time: 1686756716046;

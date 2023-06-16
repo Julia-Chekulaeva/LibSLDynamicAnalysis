@@ -1,6 +1,8 @@
-package codeExamples.example2.libExample
+package codeExamples.libExamples.example2
 
 class Class1(val name: String) {
+    constructor(digit: Int) : this("name$digit")
+    
     private lateinit var s: String
 
     val limit = 200

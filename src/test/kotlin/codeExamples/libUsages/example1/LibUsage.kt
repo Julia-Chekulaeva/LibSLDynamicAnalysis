@@ -1,7 +1,7 @@
-package codeExamples.example1.libUsage
+package codeExamples.libUsages.example1
 
-import codeExamples.example1.libExample.Class1
-import codeExamples.example1.libExample.Class2
+import codeExamples.libExamples.example1.Class1
+import codeExamples.libExamples.example1.Class2
 
 fun use1(cycles: Int) {
     val inst1 = Class1().bar()

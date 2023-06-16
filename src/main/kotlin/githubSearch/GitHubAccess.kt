@@ -18,6 +18,8 @@ const val timeLimitMillis = 60_000
 const val timeStepMillis = 5000L
 const val libNameToReplace = "new-lib-name-must-be-replaced"
 
+class GitHubException(override val message: String) : Exception()
+
 class GitHubAccess(propertyFileName: String) {
 
     private val forkedRepos = mutableListOf<GHRepository>()
@@ -64,22 +66,32 @@ class GitHubAccess(propertyFileName: String) {
                 size += step
                 Thread.sleep(1000L)
                 val searchContent = searchContent(libName, size)
-                println("File size: $size\tFiles found: ${searchContent.totalCount}")
+                println("File size: $size\tTotal count: ${searchContent.totalCount}")
                 searchResult = searchContent.toList()
+                println("Files found: ${searchResult.size}")
                 if (searchResult.size > prevFilesFound)
                     stepsWithoutIncrement = 0
-                else if (searchResult.size == prevFilesFound)
+                else if (searchResult.size == prevFilesFound) {
                     stepsWithoutIncrement++
+                    if (prevFilesFound * stepsWithoutIncrement > 200)
+                        throw GitHubException(
+                            "Too many steps without changing " +
+                                    "(steps count: $stepsWithoutIncrement, files found: $prevFilesFound)"
+                        )
+                }
                 else {
                     size -= step
                     val prevSearchContent = searchContent(libName, size)
                     println("File size: $size\tFiles found: ${prevSearchContent.totalCount}")
                     searchResult = prevSearchContent.toList()
-                    throw Exception("File size started to decrease")
+                    throw GitHubException(
+                        "File size started to decrease" +
+                            "(steps count: $stepsWithoutIncrement, files found: $prevFilesFound)"
+                    )
                 }
                 if (stepsWithoutIncrement >= maxStepsWithoutIncrement)
-                    throw Exception("No more files found on last $stepsWithoutIncrement steps")
-                step = size
+                    throw GitHubException("No more files found on last $stepsWithoutIncrement steps")
+                step = size * 2
             }
         } catch (e: Exception) {
             println(e.localizedMessage)
@@ -117,8 +129,7 @@ class GitHubAccess(propertyFileName: String) {
             println("""Repo ${repo.name} is renamed to ${repo.name}-$i
                 |""".trimMargin())
         }
-        repo.fork()
-        val myRepo = gitHub.myself.getRepository(repo.name)
+        val myRepo = repo.fork()
         println("""${repo.htmlUrl}
             |Forked: ${myRepo.htmlUrl}
             |""".trimMargin())

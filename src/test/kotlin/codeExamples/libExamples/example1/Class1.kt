@@ -1,4 +1,4 @@
-package codeExamples.example1.libExample
+package codeExamples.libExamples.example1
 
 class Class1 {
 

@@ -1,6 +1,6 @@
-package codeExamples.example3.libUsage
+package codeExamples.libUsages.example3
 
-import codeExamples.example3.libExample.Class1
+import codeExamples.libExamples.example3.Class1
 
 private fun cycleF1(n: Int) {
     val inst1 = Class1()

@@ -22,6 +22,9 @@ dependencies {
 dependencies {
     implementation("org.jboss.forge.roaster:roaster-jdt:2.28.0.Final")
     implementation("org.ejml:ejml-all:0.42")
+}
+
+dependencies {
     implementation("com.google.guava:guava:32.0.0-jre")
 }
 

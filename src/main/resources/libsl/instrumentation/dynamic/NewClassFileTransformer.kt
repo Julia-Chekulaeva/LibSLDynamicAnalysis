@@ -5,7 +5,7 @@ import java.security.ProtectionDomain
 import java.util.logging.Level
 import java.util.logging.Logger
 
-class NewClassFileTransformer(private val libName: String) : ClassFileTransformer {
+class NewClassFileTransformer : ClassFileTransformer {
 
     override fun transform(
         loader: ClassLoader?,
@@ -18,9 +18,6 @@ class NewClassFileTransformer(private val libName: String) : ClassFileTransforme
         val logger = Logger.getLogger("InstrumentationLogger")
         if (classfileBuffer == null) {
             return byteArrayOf()
-        }
-        if (!classNameNotNull.startsWith(libName)) {
-            return classfileBuffer
         }
         logger.log(Level.INFO, "${logger.name}: Changing class $classNameNotNull: started")
         logger.log(Level.INFO, "Changing class $classNameNotNull: finished")
