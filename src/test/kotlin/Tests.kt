@@ -6,11 +6,11 @@ import java.io.File
 
 class Tests {
 
-    private fun getLslPath(numberOfExample: Int) = "src/test/resources/example$numberOfExample/"
+    private fun getLslPath(numberOfExample: Int) = "src/test/resources/lslFiles$numberOfExample/"
 
-    private fun getLslFileName(numberOfExample: Int) = "lslFile$numberOfExample.lsl"
+    private fun getLslFileName(numberOfExample: Int) = "example$numberOfExample.lsl"
 
-    private val propertyFileName = "C:/Users/student/github/bot-j.github"
+    private val propertyFileName = "C:/Users/student/github/bot-lsl.github"
 
     private fun getLibrary(numberOfExample: Int) =
         LibSL(getLslPath(numberOfExample)).loadFromFileName(getLslFileName(numberOfExample))

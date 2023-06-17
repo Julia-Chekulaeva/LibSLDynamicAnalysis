@@ -1,4 +1,4 @@
-package libsl.instrumentation.static.java;
+package libsl.instrumentation.staticInstr.java;
 
 import java.io.*;
 import java.util.List;

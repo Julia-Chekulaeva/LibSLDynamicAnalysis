@@ -16,7 +16,6 @@ const val workflowName = "bot-j-Run-Instrumented-Tests-With-Logs"
 const val qLanguage = "gradle"
 const val timeLimitMillis = 60_000
 const val timeStepMillis = 5000L
-const val libNameToReplace = "new-lib-name-must-be-replaced"
 
 class GitHubException(override val message: String) : Exception()
 
@@ -134,7 +133,11 @@ class GitHubAccess(propertyFileName: String) {
             |Forked: ${myRepo.htmlUrl}
             |""".trimMargin())
         forkedRepos.add(myRepo)
-        editForkedRepo(myRepo)
+        try {
+            editForkedRepo(myRepo)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     private fun editForkedRepo(myRepo: GHRepository) {
@@ -169,14 +172,12 @@ class GitHubAccess(propertyFileName: String) {
     }
 
     private fun sourceCodeFilesDynamicInstrumentation(myRepo: GHRepository) {
-        val path = "${File.pathSeparator}libsl${File.pathSeparator}instrumentation${File.pathSeparator}dynamic"
-        val pathForGithub = "src${File.pathSeparator}main${File.pathSeparator}kotlin$path"
-        val localFiles = File("$resourcesPath$path").listFiles()
-        for (file in localFiles!!) {
-            val fullFileName = "$pathForGithub${File.pathSeparator}${file.name}"
-            myRepo.createContent().content(file.readText().replace(
-                libNameToReplace, ""
-            )).path(fullFileName).message("Add $fullFileName file").commit()
+        val path = "${File.separator}libsl${File.separator}instrumentation${File.separator}dynamic"
+        val pathForGithub = "src${File.separator}main${File.separator}kotlin$path"
+        val localFiles = File("$resourcesPath$path").listFiles()!!
+        for (file in localFiles) {
+            val fullFileName = "$pathForGithub${File.separator}${file.name}"
+            myRepo.createContent().content(file.readText()).path(fullFileName).message("Add $fullFileName file").commit()
         }
     }
 

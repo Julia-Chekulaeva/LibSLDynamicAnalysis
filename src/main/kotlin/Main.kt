@@ -2,7 +2,7 @@ import githubSearch.GitHubAccess
 import org.kohsuke.github.GitHub
 
 
-const val propertyFileName = "C:/Users/student/github/bot-j.github"
+const val propertyFileName = "C:/Users/student/github/bot-lsl.github"
 
 fun main() {
     val libName = "org.yaml:snakeyaml:2.0"
