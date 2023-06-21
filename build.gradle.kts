@@ -30,8 +30,8 @@ tasks.test {
 
 tasks.test {
     jvmArgs = mutableListOf(
-        "-javaagent:InstrumentAgent1/build/libs/InstrumentAgent1-1.0-SNAPSHOT.jar",
-        "-javaagent:InstrumentAgent2/build/libs/InstrumentAgent2-1.0-SNAPSHOT.jar"
+        //"-javaagent:InstrumentAgent1/build/libs/InstrumentAgent1-1.0-SNAPSHOT.jar",
+        //"-javaagent:InstrumentAgent2/build/libs/InstrumentAgent2-1.0-SNAPSHOT.jar"
     )
 }
 
