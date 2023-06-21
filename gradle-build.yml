@@ -1,0 +1,10 @@
+name: gradle-build
+run-name: gradle-build
+on: [push]
+jobs:
+  Gradle-Run-Tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@HEAD
+      - run: gradle build
