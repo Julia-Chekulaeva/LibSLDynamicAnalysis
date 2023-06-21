@@ -1,6 +1,6 @@
 name: gradle-build
 run-name: gradle-build
-on: [push, pull-request]
+on: [push]
 jobs:
   Gradle-Run-Tests:
     runs-on: ubuntu-latest
