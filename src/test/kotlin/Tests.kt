@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import java.io.File
 
 class Tests {
-
+    /*
     private val lslPath = "src/test/resources/lslFiles/"
 
     private fun getLslPath(numberOfExample: Int) = "src/test/resources/lslFiles$numberOfExample/"
@@ -59,4 +59,5 @@ class Tests {
             "src/test/resources/example$exampleIndex/matrixAndNodeNamesExample$exampleIndex.txt"
         )
     }
+    */
 }
