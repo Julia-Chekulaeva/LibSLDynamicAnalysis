@@ -9,12 +9,17 @@ class Class2 {
     private var s = ""
 
     fun writeS(newS: String): Class2 {
+        println("Internal call: function Class2.setS(String)")
         s = newS
+        println("Internal call: function Class2.getS()")
         println(s)
         return this
     }
 
     fun writeS(inst: Class1) {
+        println("Internal calls: function Class1.foo(Int, String)")
+        println("                function Class1.getI()")
+        println("                function Class2.getS()")
         writeS(inst.foo(inst.i, s))
     }
 }

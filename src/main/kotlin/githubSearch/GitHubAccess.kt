@@ -1,7 +1,12 @@
 package githubSearch
 
 import instrumentStatic.modifyCode
-import org.kohsuke.github.*
+import lslLocalFileName
+import lslLocalPath
+import org.kohsuke.github.GHRepository
+import org.kohsuke.github.GHWorkflowRun
+import org.kohsuke.github.GitHub
+import org.kohsuke.github.GitHubBuilder
 import java.io.File
 
 
@@ -16,10 +21,15 @@ const val workflowName = "bot-j-Run-Instrumented-Tests-With-Logs"
 const val qLanguage = "gradle"
 const val timeLimitMillis = 60_000
 const val timeStepMillis = 5000L
+const val lslInstrFileName = "$lslLocalPath$lslLocalFileName"
 
 class GitHubException(override val message: String) : Exception()
 
-class GitHubAccess(propertyFileName: String) {
+class GitHubAccess(
+    propertyFileName: String,
+    private val lslLocalPath: String,
+    private val lslLocalFileName: String
+    ) {
 
     private val forkedRepos = mutableListOf<GHRepository>()
 
@@ -172,16 +182,37 @@ class GitHubAccess(propertyFileName: String) {
     }
 
     private fun sourceCodeFilesDynamicInstrumentation(myRepo: GHRepository) {
-        val path = "${File.separator}libsl${File.separator}instrumentation${File.separator}dynamic"
-        val pathForGithub = "src${File.separator}main${File.separator}kotlin$path"
-        val localFiles = File("$resourcesPath$path").listFiles()!!
-        for (file in localFiles) {
-            val fullFileName = "$pathForGithub${File.separator}${file.name}"
-            myRepo.createContent().content(file.readText()).path(fullFileName).message("Add $fullFileName file").commit()
+        val agentJarName = "LibSLDynamicAnalysis-1.0-SNAPSHOT.jar"
+        val agentJarPath = "build${File.separator}libs${File.separator}$agentJarName"
+        val pathForGitHub = agentJarPath.replace(File.separator, ".")
+        val lslFilePathForGitHub = "${lslInstrFileName.replace("/", ".")}$lslInstrFileName"
+        val lslLocalFile = File("$lslLocalPath$lslLocalFileName")
+        val jarFile = File(agentJarPath)
+        myRepo.createContent().path(pathForGitHub).content(jarFile.readBytes())
+            .message("Add $agentJarName file").commit()
+        myRepo.createContent().path(lslFilePathForGitHub).content(lslLocalFile.readBytes())
+            .message("Add $lslLocalFileName file").commit()
+        for (gradleFile in myRepo.getDirectoryContent("").toMutableList()) {
+            if (gradleFile.name.endsWith(".gradle.kts")) {
+                gradleFile.update(
+                    gradleFile.read().toString() + """
+                        |
+                        |
+                        |dependencies {
+                        |    implementation("com.github.vldF:libsl:v1.1.0-RC")
+                        |}
+                        |
+                        |tasks.test {
+                        |    jvmArgs = mutableListOf("-javaagent:build/libs/LibSLDynamicAnalysis-1.0-SNAPSHOT.jar")
+                        |}
+                    """.trimMargin(),
+                    "Modify gradle file"
+                )
+            }
         }
     }
 
-    private fun checkJobStatusAndLoadLogs(myRepo: GHRepository): Boolean {
+    fun checkJobStatusAndLoadLogs(myRepo: GHRepository): Boolean {
         val workflows = myRepo.listWorkflows().toList().filter { it.name == workflowName }
         if (workflows.isEmpty())
             return false

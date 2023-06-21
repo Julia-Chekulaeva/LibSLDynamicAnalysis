@@ -1,7 +1,7 @@
 libsl "1.0.0";
 library example2;
 
-import java;
+import "java";
 
 type codeExamples.libExamples.example2.Class1 {
     name: java.lang.String;

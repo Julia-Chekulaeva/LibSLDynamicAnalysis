@@ -1,31 +1,20 @@
 import githubSearch.GitHubAccess
-import org.kohsuke.github.GitHub
+import java.io.File
 
 
 const val propertyFileName = "C:/Users/student/github/bot-lsl.github"
+const val libName = "org.yaml:snakeyaml:2.0"
+const val lslLocalPath = "src/main/resources/lslFiles/"
+const val lslLocalFileName = "example.lsl"
 
 fun main() {
-    val libName = "org.yaml:snakeyaml:2.0"
-    val gitHubAccess = GitHubAccess(propertyFileName)
-    gitHubAccess.analyseDataFromRepos(libName)
-    gitHubAccess.clearLogs()
+    val lslFile = File("$lslLocalPath$lslLocalFileName")
+    lslFile.createNewFile()
+    app(propertyFileName, libName, lslLocalPath, lslLocalFileName)
 }
 
-fun testForks(github: GitHub) {
-    github.searchRepositories().q("KotlinAsFirst2019").list().forEach {
-        println("Repo ${it.fullName}")
-        if (it.isFork && it.source.listCommits() == it.listCommits())
-            return
-        if (it.isFork)
-            println("Repo ${it.fullName} is a fork, source repo: ${it.source.fullName}, parent repo: ${
-                it.source.fullName
-            }")
-        try {
-            it.fork()
-            println("Repo ${it.fullName} is forked")
-        } catch (e: Exception) {
-            println(e.localizedMessage)
-            e.printStackTrace()
-        }
-    }
+fun app(propertyFileName: String, libName: String, lslLocalPath: String, lslLocalFileName: String) {
+    val gitHubAccess = GitHubAccess(propertyFileName, lslLocalPath, lslLocalFileName)
+    gitHubAccess.analyseDataFromRepos(libName)
+    gitHubAccess.clearLogs()
 }

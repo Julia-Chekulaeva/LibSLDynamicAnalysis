@@ -6,6 +6,8 @@ import java.io.File
 
 class Tests {
 
+    private val lslPath = "src/test/resources/lslFiles/"
+
     private fun getLslPath(numberOfExample: Int) = "src/test/resources/lslFiles$numberOfExample/"
 
     private fun getLslFileName(numberOfExample: Int) = "example$numberOfExample.lsl"
@@ -16,26 +18,29 @@ class Tests {
         LibSL(getLslPath(numberOfExample)).loadFromFileName(getLslFileName(numberOfExample))
 
     @Test
-    fun processRepoTest() {
-        val githubAccess = GitHubAccess(propertyFileName)
+    fun processReposTest() {
+        processRepoTest(
+            lslPath, "shakeyaml-2.0.lsl", "spring-projects/spring-framework"
+        )
+    }
+
+    private fun processRepoTest(lslPath: String, lslFileName: String, repoName: String) {
+        val githubAccess = GitHubAccess(propertyFileName, lslPath, lslFileName)
         val gitHub = githubAccess.getGitHub()
         println(gitHub.myself)
         githubAccess.cleanRepos()
-        val botRepo = gitHub.getRepository("Julia-Chekulaeva/YouTubeGifAndSoundBot")
+        val botRepo = gitHub.getRepository(repoName)
         githubAccess.forkAndEditRepo(botRepo)
+        Thread.sleep(120000)
+        githubAccess.checkJobStatusAndLoadLogs(botRepo)
     }
 
     @Test
     fun cleanReposTest() {
-        val githubAccess = GitHubAccess(propertyFileName)
+        val githubAccess = GitHubAccess(propertyFileName, lslLocalPath, lslLocalFileName)
         val gitHub = githubAccess.getGitHub()
         githubAccess.cleanRepos()
         assert(gitHub.myself.allRepositories.isEmpty())
-    }
-
-    @Test
-    fun testForks() {
-        testForks(GitHubAccess(propertyFileName).getGitHub())
     }
 
     @Test
