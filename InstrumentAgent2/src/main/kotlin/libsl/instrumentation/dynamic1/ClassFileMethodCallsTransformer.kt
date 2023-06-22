@@ -1,14 +1,15 @@
-package libsl.instrumentation.dynamic
+package libsl.instrumentation.dynamic1
 
 import javassist.*
 import javassist.expr.ExprEditor
 import javassist.expr.MethodCall
+import java.io.File
 import java.lang.instrument.ClassFileTransformer
 import java.security.ProtectionDomain
 import java.util.logging.Level
 import java.util.logging.Logger
 
-class ClassFileAddMethodsTransformer(
+class ClassFileMethodCallsTransformer(
     private val classesToOldToNewMethods: Map<String, Map<Pair<String, List<String>>, String>>
 ) : ClassFileTransformer {
 
@@ -38,7 +39,9 @@ class ClassFileAddMethodsTransformer(
         logger.log(Level.INFO, "${logger.name}: Changing class $classNameWithDots: started")
         val newClassfileBuffer = useJavassist(classNameWithDots, logger, classfileBuffer, oldToNewMethods)
         logger.log(Level.INFO, "Changing class $classNameWithDots: finished")
-        println("Classes with old and new methods: $classesToOldToNewMethods")
+        val file = File("src/main/resources/2/$className.class")
+        file.parentFile.mkdirs()
+        file.writeBytes(newClassfileBuffer)
         return newClassfileBuffer
     }
 
@@ -48,20 +51,16 @@ class ClassFileAddMethodsTransformer(
     ): ByteArray {
         pool.insertClassPath(ByteArrayClassPath(classNameWithDots, classfileBuffer))
         val ctClass = pool[classNameWithDots]
+        logger.log(Level.INFO, "Class ${ctClass.name} methods are: ${ctClass.declaredMethods.joinToString { method ->
+            "${method.name}(${method.parameterTypes.joinToString { it.name }})"
+        }}")
         val methods = ctClass.declaredMethods.toList()
         for (method in methods) {
             oldToNewMethods[
                     method.name to method.parameterTypes.map { it.name }
             ] ?: continue
-            logger.log(
-                Level.INFO,
-                "Method ${method.name}: ${method.parameterTypes.joinToString { it.name }}"
-            )
             analyseMethod(method)
         }
-        logger.log(Level.INFO, "Class ${ctClass.name} methods are: ${ctClass.declaredMethods.joinToString { method ->
-            "${method.name}(${method.parameterTypes.joinToString { it.name }})"
-        }}")
         return ctClass.toBytecode()
     }
 

@@ -17,9 +17,10 @@ class Class2 {
     }
 
     fun writeS(inst: Class1) {
-        println("Internal calls: function Class1.foo(Int, String)")
+        println("Internal calls: function Class2.getS()")
         println("                function Class1.getI()")
-        println("                function Class2.getS()")
+        println("                function Class1.foo(Int, String)")
+        println("                function Class2.writeS(String)")
         writeS(inst.foo(inst.i, s))
     }
 }

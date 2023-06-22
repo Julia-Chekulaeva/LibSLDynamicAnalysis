@@ -1,12 +1,6 @@
 package githubSearch
 
-import instrumentStatic.modifyCode
-import lslLocalFileName
-import lslLocalPath
-import org.kohsuke.github.GHRepository
-import org.kohsuke.github.GHWorkflowRun
-import org.kohsuke.github.GitHub
-import org.kohsuke.github.GitHubBuilder
+import org.kohsuke.github.*
 import java.io.File
 
 
@@ -21,7 +15,6 @@ const val workflowName = "bot-j-Run-Instrumented-Tests-With-Logs"
 const val qLanguage = "gradle"
 const val timeLimitMillis = 60_000
 const val timeStepMillis = 5000L
-const val lslInstrFileName = "$lslLocalPath$lslLocalFileName"
 
 class GitHubException(override val message: String) : Exception()
 
@@ -57,8 +50,10 @@ class GitHubAccess(
         forkedRepos.clear()
     }
 
-    private fun searchContent(libName: String, size: Int) =
-        gitHub.searchContent().q(libName).size("<$size").language(qLanguage).list()
+    private fun searchContent(libName: String, size: Int): PagedSearchIterable<GHContent> {
+        val result = gitHub.searchContent().q(libName).language(qLanguage)
+        return result.size("<$size").list()
+    }
 
     private fun searchForkAndEditRepos(libName: String) {
         println("""Myself: ${gitHub.myself.htmlUrl}
@@ -67,6 +62,7 @@ class GitHubAccess(
         var size = 0
         var step = 1
         val maxStepsWithoutIncrement = 20
+        val maxFilesCount = 100
         var searchResult = searchContent(libName, size).toList()
         var stepsWithoutIncrement = 0
         try {
@@ -80,7 +76,11 @@ class GitHubAccess(
                 println("Files found: ${searchResult.size}")
                 if (searchResult.size > prevFilesFound)
                     stepsWithoutIncrement = 0
-                else if (searchResult.size == prevFilesFound) {
+                else if (searchResult.size > maxFilesCount) {
+                    throw GitHubException(
+                        "Too many files found: $prevFilesFound"
+                    )
+                } else if (searchResult.size == prevFilesFound) {
                     stepsWithoutIncrement++
                     if (prevFilesFound * stepsWithoutIncrement > 200)
                         throw GitHubException(
@@ -152,6 +152,11 @@ class GitHubAccess(
 
     private fun editForkedRepo(myRepo: GHRepository) {
         sourceCodeFilesDynamicInstrumentation(myRepo)
+        addGHActionsFile(myRepo)
+        myRepo.listWorkflows().forEach { it.enable() }
+    }
+
+    private fun addGHActionsFile(myRepo: GHRepository) {
         val ghActionsFile = File("$resourcesPath/$gitHubActionsFile")
         var index = 0
         var actionsFileName = gitHubActionsFile
@@ -166,49 +171,56 @@ class GitHubAccess(
         }
         myRepo.createContent().content(ghActionsFile.readText()).path(actionsFileName)
             .message("Add $actionsFileName file").commit()
-        myRepo.listWorkflows().forEach { it.enable() }
-    }
-
-    private fun sourceCodeFilesStaticInstrumentation(myRepo: GHRepository) {
-        val files = myRepo.getDirectoryContent("").toMutableList()
-        while (files.isNotEmpty()) {
-            val file = files.removeAt(0)
-            if (file.isDirectory) {
-                files.addAll((myRepo.getDirectoryContent(file.path).toMutableList()))
-            } else if (file.name.endsWith(".java")) {
-                file.update(modifyCode(file.read().toString()), "Modify ${file.path} file")
-            }
-        }
     }
 
     private fun sourceCodeFilesDynamicInstrumentation(myRepo: GHRepository) {
-        val agentJarName = "LibSLDynamicAnalysis-1.0-SNAPSHOT.jar"
-        val agentJarPath = "build${File.separator}libs${File.separator}$agentJarName"
-        val pathForGitHub = agentJarPath.replace(File.separator, ".")
-        val lslFilePathForGitHub = "${lslInstrFileName.replace("/", ".")}$lslInstrFileName"
+        addJarAgent(1, myRepo)
+        addJarAgent(2, myRepo)
         val lslLocalFile = File("$lslLocalPath$lslLocalFileName")
-        val jarFile = File(agentJarPath)
-        myRepo.createContent().path(pathForGitHub).content(jarFile.readBytes())
-            .message("Add $agentJarName file").commit()
-        myRepo.createContent().path(lslFilePathForGitHub).content(lslLocalFile.readBytes())
+        val lslFilePathForGitHub = lslLocalFile.absolutePath
+        val configFileName = "src/main/resources/config"
+        val configContent = """
+            |lslPath="$lslLocalPath"
+            |lslFileName="$lslLocalFileName"
+        """.trimMargin()
+        myRepo.createContent().path(lslFilePathForGitHub).content(lslLocalFile.readText())
             .message("Add $lslLocalFileName file").commit()
-        for (gradleFile in myRepo.getDirectoryContent("").toMutableList()) {
-            if (gradleFile.name.endsWith(".gradle.kts")) {
-                gradleFile.update(
-                    gradleFile.read().toString() + """
-                        |
+        myRepo.createContent().path(configFileName).content(configContent)
+            .message("Add $lslLocalFileName file").commit()
+        modifyGradleFiles(myRepo.getFileContent(""))
+    }
+
+    private fun addJarAgent(index: Int, myRepo: GHRepository) {
+        val agentJarName = "InstrumentAgent$index-1.0-SNAPSHOT.jar"
+        val agentJarPath = "InstrumentAgent$index${File.separator}build${File.separator}libs${File.separator}$agentJarName"
+        val jarFile = File(agentJarPath)
+        myRepo.createContent().path(agentJarName).content(jarFile.readBytes())
+            .message("Add $agentJarName file").commit()
+    }
+
+    private fun modifyGradleFiles(gradleFile: GHContent) {
+        if (gradleFile.isDirectory) {
+            for (file in gradleFile.listDirectoryContent()) {
+                modifyGradleFiles(file)
+            }
+        } else if (gradleFile.name.endsWith(".gradle.kts")) {
+            gradleFile.update(
+                gradleFile.read().toString() + """
                         |
                         |dependencies {
-                        |    implementation("com.github.vldF:libsl:v1.1.0-RC")
+                        |    implementation("com.github.vldf:libsl:4a5d678")
+                        |    implementation("org.javassist:javassist:3.29.2-GA")
                         |}
                         |
                         |tasks.test {
-                        |    jvmArgs = mutableListOf("-javaagent:build/libs/LibSLDynamicAnalysis-1.0-SNAPSHOT.jar")
+                        |    jvmArgs = mutableListOf(
+                        |        "-javaagent:InstrumentAgent1-1.0-SNAPSHOT.jar",
+                        |        "-javaagent:InstrumentAgent2-1.0-SNAPSHOT.jar",
+                        |    )
                         |}
                     """.trimMargin(),
-                    "Modify gradle file"
-                )
-            }
+                "Modify ${gradleFile.name} file"
+            )
         }
     }
 

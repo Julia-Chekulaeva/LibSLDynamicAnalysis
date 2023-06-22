@@ -1,6 +1,7 @@
 package libsl.instrumentation.dynamic
 
 import javassist.*
+import java.io.File
 import java.lang.instrument.ClassFileTransformer
 import java.security.ProtectionDomain
 import java.util.logging.Level
@@ -33,10 +34,12 @@ class ClassFileAddMethodsTransformer(
             return byteArrayOf()
         }
         val oldToNewMethods = getOldToNewMethods(classNameWithDots) ?: return classfileBuffer
-        logger.log(Level.INFO, "${logger.name}: Changing class $classNameWithDots: started")
+        logger.log(Level.INFO, "First changing class $classNameWithDots: started")
         val newClassfileBuffer = useJavassist(classNameWithDots, logger, classfileBuffer, oldToNewMethods)
-        logger.log(Level.INFO, "Changing class $classNameWithDots: finished")
-        println("Classes with old and new methods: $classesToOldToNewMethods")
+        logger.log(Level.INFO, "First changing class $classNameWithDots: finished")
+        val file = File("src/main/resources/1/$className.class")
+        file.parentFile.mkdirs()
+        file.writeBytes(newClassfileBuffer)
         return newClassfileBuffer
     }
 
@@ -51,10 +54,6 @@ class ClassFileAddMethodsTransformer(
             val newMethodName = oldToNewMethods[
                     method.name to method.parameterTypes.map { it.name }
             ] ?: continue
-            logger.log(
-                Level.INFO,
-                "Method ${method.name}: ${method.parameterTypes.joinToString { it.name }}"
-            )
             analyseMethod(ctClass, method, newMethodName)
         }
         logger.log(Level.INFO, "Class ${ctClass.name} methods are: ${ctClass.declaredMethods.joinToString { method ->
@@ -72,15 +71,30 @@ class ClassFileAddMethodsTransformer(
         val createdMethod = CtNewMethod.copy(
             method, newMethodName, ctClass, classMap
         )
-        method.insertBefore(getLogCommand(classNameWithDots, oldMethodName, method, argNames))
+        try {
+            val logCommand = getLogCommand(classNameWithDots, oldMethodName, method, argNames)
+            method.insertBefore(logCommand)
+            createdMethod.insertBefore("System.out.println(\"Hi from ${createdMethod.name} fun!\");")
+            method.insertBefore("System.out.println(\"Hi from ${method.name} fun!\");")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         ctClass.addMethod(createdMethod)
     }
 
     private fun getLogCommand(
         classNameWithDots: String, oldMethodName: String, method: CtMethod, argNames: Array<String>
-    ) = """MyLogger.myLogger.log("METHOD_CALL", "$classNameWithDots", "$oldMethodName", "${
-        method.parameterTypes.withIndex().joinToString {
-            "${argNames[it.index]}: ${it.value.name} = \" + $${it.index + 1}.hashCode() + \""
+    ): String {
+        val isStatic = method.methodInfo.isStaticInitializer.toString()
+        val id = if (method.methodInfo.isStaticInitializer) "0" else "$0.hashCode()"
+        val params = method.parameterTypes.withIndex().joinToString {
+            "${argNames[it.index]}: ${it.value.name}${""/*= \" + $${it.index + 1}.hashCode() + \"*/}"
         }
-    }", "${method.returnType.name}", hashCode());""".trimMargin()
+        val returnType = method.returnType.name
+        val result = """
+            |MyLogger.myLogger.log(
+            |    "METHOD_CALL", "$classNameWithDots", "$oldMethodName", "$params", "$returnType", $id, $isStatic
+            |);"""
+        return result.trimMargin()
+    }
 }

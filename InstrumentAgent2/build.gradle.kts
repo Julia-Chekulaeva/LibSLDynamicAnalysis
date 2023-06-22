@@ -21,8 +21,8 @@ dependencies {
 
 tasks.jar {
     manifest {
-        attributes["Main-Class"] = "libsl.instrumentation.dynamic.MainKt"
-        attributes["Premain-Class"] = "libsl.instrumentation.dynamic.PreMainKt"
+        attributes["Main-Class"] = "libsl.instrumentation.dynamic1.MainKt"
+        attributes["Premain-Class"] = "libsl.instrumentation.dynamic1.PreMainKt"
     }
 }
 

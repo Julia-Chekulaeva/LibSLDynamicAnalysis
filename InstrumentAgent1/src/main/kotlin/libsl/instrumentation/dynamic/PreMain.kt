@@ -28,21 +28,14 @@ private fun addTransformer(instrumentation: Instrumentation, lslFileName: String
     val library = LibSL(lslPath).loadFromFileName(lslFileName)
     val classesToOldToNewMethods = mutableMapOf<String, MutableMap<Pair<String, List<String>>, String>>()
     library.automataReferences.forEach { automatonReference ->
-        println("Automaton ${automatonReference.name}")
         val className = automatonReference.name
         val oldToNewMethods = mutableMapOf<Pair<String, List<String>>, String>()
         classesToOldToNewMethods[className] = oldToNewMethods
         val resolvedAutomation = automatonReference.resolve()
-        if (resolvedAutomation != null) {
-            println("Resolved automaton: name ${
-                resolvedAutomation.name
-            }, type ${resolvedAutomation.typeReference.name}")
-            resolvedAutomation.functions.forEach { function ->
-                oldToNewMethods[
-                        function.name to function.args.map { it.typeReference.name }
-                ] = getNewMethodName(function, resolvedAutomation.functions)
-                println("Method ${function.name}, args: ${function.args.joinToString { it.typeReference.name }}")
-            }
+        resolvedAutomation?.functions?.forEach { function ->
+            oldToNewMethods[
+                    function.name to function.args.map { it.typeReference.name }
+            ] = getNewMethodName(function, resolvedAutomation.functions)
         }
     }
     instrumentation.addTransformer(ClassFileAddMethodsTransformer(classesToOldToNewMethods))

@@ -45,7 +45,7 @@ public class MyLogger {
 
     public void log(
             String logType, String className, String methodName, String parameters,
-            String returnType, int objectId
+            String returnType, int objectId, boolean isStatic
     ) throws IOException {
         FileWriter fileWriter;
         try {
@@ -64,7 +64,7 @@ public class MyLogger {
         msg.append("); return_type: ");
         msg.append(returnType);
         msg.append("; object_id: ");
-        msg.append(objectId);
+        msg.append(isStatic ? null : objectId);
         msg.append("; time: ");
         msg.append(System.currentTimeMillis());
         msg.append("; ");

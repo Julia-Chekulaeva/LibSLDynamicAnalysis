@@ -1,11 +1,10 @@
 import githubSearch.GitHubAccess
 import logAnalysis.AnalyseLogs
 import org.jetbrains.research.libsl.LibSL
-import org.junit.jupiter.api.Test
 import java.io.File
 
 class Tests {
-    /*
+
     private val lslPath = "src/test/resources/lslFiles/"
 
     private fun getLslPath(numberOfExample: Int) = "src/test/resources/lslFiles$numberOfExample/"
@@ -17,7 +16,7 @@ class Tests {
     private fun getLibrary(numberOfExample: Int) =
         LibSL(getLslPath(numberOfExample)).loadFromFileName(getLslFileName(numberOfExample))
 
-    @Test
+    //@Test
     fun processReposTest() {
         processRepoTest(
             lslPath, "shakeyaml-2.0.lsl", "spring-projects/spring-framework"
@@ -35,15 +34,18 @@ class Tests {
         githubAccess.checkJobStatusAndLoadLogs(botRepo)
     }
 
-    @Test
+    //@Test
     fun cleanReposTest() {
+        println("Accessing to github account...")
         val githubAccess = GitHubAccess(propertyFileName, lslLocalPath, lslLocalFileName)
-        val gitHub = githubAccess.getGitHub()
+        println("Cleaning repositories started...")
         githubAccess.cleanRepos()
+        println("Cleaning repositories finished")
+        val gitHub = githubAccess.getGitHub()
         assert(gitHub.myself.allRepositories.isEmpty())
     }
 
-    @Test
+    //@Test
     fun analyseLogs() {
         analyseLogsExample(1)
         analyseLogsExample(2)
@@ -55,9 +57,7 @@ class Tests {
             getLibrary(exampleIndex)
         )
         analyseLogs.analyseLogInfo(
-            "src/test/resources/example$exampleIndex/graphForLogExample$exampleIndex.txt",
-            "src/test/resources/example$exampleIndex/matrixAndNodeNamesExample$exampleIndex.txt"
+            "src/test/resources/example$exampleIndex/graphForLogExample$exampleIndex.txt"
         )
     }
-    */
 }

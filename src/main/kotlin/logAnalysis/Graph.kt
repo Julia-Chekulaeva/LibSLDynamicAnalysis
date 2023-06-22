@@ -145,7 +145,7 @@ class Graph {
             setOfNodes.removeIf {
                 it !in nodes
             }
-            val minLevelNode = setOfNodes.filter { it.level != null }.minByOrNull { it.level!! }!!
+            val minLevelNode = setOfNodes.filter { it.level != null }.minByOrNull { it.level ?: 0 } ?: startNode
             setOfNodes.remove(minLevelNode)
             for (nodeToDelete in setOfNodes) {
                 for (parent in nodes.filter { it.children.containsKey(nodeToDelete) }) {
@@ -194,6 +194,14 @@ class Graph {
     }
 
     override fun toString(): String {
-        return startNode.toString()
+        return """digraph SomeAutomaton {
+            |${nodes.indices.joinToString (System.lineSeparator()) { "\ts$it;" }}
+            |${nodes.withIndex().joinToString (System.lineSeparator()) { (i, n) -> 
+                n.children.toList().joinToString (System.lineSeparator()) { (child, count) ->
+                    "\ts$i -> s${nodes.indexOf(child)} [label=\"${child.name} ($count)\"];"
+                }
+            }}
+            |}
+        """.trimMargin()
     }
 }

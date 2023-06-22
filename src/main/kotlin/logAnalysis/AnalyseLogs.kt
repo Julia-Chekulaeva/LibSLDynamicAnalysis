@@ -34,8 +34,8 @@ class AnalyseLogs(private val logFiles: List<File>, private val library: Library
                 val parametersStr = getLogValueForKeyWord(split, 2).removePrefix("(").removeSuffix(")")
                 val parameters = if (parametersStr.matches(Regex(" *")))
                     listOf()
-                else parametersStr.split(splitRegex2).map { it.split(": ", " = ") }.map {
-                    MethodCallLogInfo.ParameterLogInfo(it[0], it[1], it[2].toLong())
+                else parametersStr.split(splitRegex2).map { it.split(": ") }.map {
+                    MethodCallLogInfo.ParameterLogInfo(it[0], it[1])
                 }
                 val returnType = getLogValueForKeyWord(split, 3)
                 val objectId = getLogValueForKeyWord(split, 4).toLongOrNull()
@@ -84,7 +84,7 @@ class AnalyseLogs(private val logFiles: List<File>, private val library: Library
         return result
     }
 
-    fun analyseLogInfo(graphFilePath: String, matrixAndNodeNamesFilePath: String) {
+    fun analyseLogInfo(graphFilePath: String) {
         methodCallGroups.forEach { classGroup ->
             var prevNode = graph.startNode
             classGroup.forEach { methodCallLogInfo ->
@@ -94,6 +94,5 @@ class AnalyseLogs(private val logFiles: List<File>, private val library: Library
         }
         graph.kTail(5)
         File(graphFilePath).writeText(graph.toString())
-        File(matrixAndNodeNamesFilePath).writeText(graph.matrixOfWeightsAndNamesToString())
     }
 }

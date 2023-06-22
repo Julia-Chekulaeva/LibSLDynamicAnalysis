@@ -6,6 +6,8 @@ import codeExamples.libExamples.example1.Class2
 fun use1(cycles: Int) {
     println("External call: function Class1.bar()")
     val inst1 = Class1().bar()
+    println("External call: function Class1.staticFun()")
+    Class1.staticFun()
     for (i in 0 until cycles) {
         println("External call: function Class1.foo(Int, String)")
         println(inst1.foo(2, "someStringExample"))
@@ -23,6 +25,8 @@ fun use1(cycles: Int) {
     inst2.writeS("otherStringExample").writeS(inst1)
     val inst3 = Class1()
     val inst4 = Class2()
+    println("External call: function Class1.setI(Int)")
+    inst3.i = 4
     println("External call: function Class1.getI()")
     println("Value i before executing bar(): ${inst3.i}")
     println("External calls: function Class1.bar()")
