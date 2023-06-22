@@ -16,4 +16,4 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: test -i
-          gradle-version: 7.4.2
+          gradle-version: 7.6
