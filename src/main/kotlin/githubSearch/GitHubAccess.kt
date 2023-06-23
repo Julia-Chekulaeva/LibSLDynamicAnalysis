@@ -62,7 +62,7 @@ class GitHubAccess(
         var size = 0
         var step = 1
         val maxStepsWithoutIncrement = 20
-        val maxFilesCount = 100
+        val maxFilesCount = 1
         var searchResult = searchContent(libName, size).toList()
         var stepsWithoutIncrement = 0
         try {
@@ -74,13 +74,14 @@ class GitHubAccess(
                 println("File size: $size\tTotal count: ${searchContent.totalCount}")
                 searchResult = searchContent.toList()
                 println("Files found: ${searchResult.size}")
-                if (searchResult.size > prevFilesFound)
-                    stepsWithoutIncrement = 0
-                else if (searchResult.size > maxFilesCount) {
+                if (searchResult.size > maxFilesCount) {
                     throw GitHubException(
                         "Too many files found: $prevFilesFound"
                     )
-                } else if (searchResult.size == prevFilesFound) {
+                }
+                if (searchResult.size > prevFilesFound)
+                    stepsWithoutIncrement = 0
+                else if (searchResult.size == prevFilesFound) {
                     stepsWithoutIncrement++
                     if (prevFilesFound * stepsWithoutIncrement > 200)
                         throw GitHubException(
@@ -186,7 +187,7 @@ class GitHubAccess(
         myRepo.createContent().path(lslFilePathForGitHub).content(lslLocalFile.readText())
             .message("Add $lslLocalFileName file").commit()
         myRepo.createContent().path(configFileName).content(configContent)
-            .message("Add $lslLocalFileName file").commit()
+            .message("Add $configFileName file").commit()
         modifyGradleFiles(myRepo.getFileContent(""))
     }
 
