@@ -1,7 +1,7 @@
-package codeExamples.libUsages.example2
+package codeExamples.libUsages.kotlin.example2
 
-import codeExamples.libExamples.example2.Class1
-import codeExamples.libExamples.example2.Class2
+import codeExamples.libExamples.kotlin.example2.Class1
+import codeExamples.libExamples.kotlin.example2.Class2
 
 fun use1(n: Int) {
     val inst1 = Class1("inst1")

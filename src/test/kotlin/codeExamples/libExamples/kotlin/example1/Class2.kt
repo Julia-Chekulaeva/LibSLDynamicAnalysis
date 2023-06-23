@@ -1,4 +1,4 @@
-package codeExamples.libExamples.example1
+package codeExamples.libExamples.kotlin.example1
 
 class Class2 {
 

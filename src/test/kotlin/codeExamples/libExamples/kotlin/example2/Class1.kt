@@ -1,4 +1,4 @@
-package codeExamples.libExamples.example2
+package codeExamples.libExamples.kotlin.example2
 
 class Class1(val name: String) {
     constructor(digit: Int) : this("name$digit")
@@ -29,6 +29,10 @@ class Class1(val name: String) {
     }
 
     fun setIToNull(): Class1 {
+        println("Internal call: Class1.setI(Int)")
+        setI(0)
+        println("Internal call: Class1.incrementI()")
+        incrementI()
         i = null
         return this
     }

@@ -1,6 +1,6 @@
-package codeExamples.libUsages.example3
+package codeExamples.libUsages.kotlin.example3
 
-import codeExamples.libExamples.example3.Class1
+import codeExamples.libExamples.kotlin.example3.*
 
 private fun cycleF1(n: Int) {
     val inst1 = Class1()
@@ -12,7 +12,7 @@ private fun cycleF2AndF3(n: Int) {
     val inst2 = Class1()
     for (i in 0 until n) {
         inst2.f2()
-        inst2.f3()
+        inst2.f3(0)
     }
 }
 

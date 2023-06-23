@@ -1,6 +1,7 @@
 package libsl.instrumentation.dynamic1
 
 import javassist.*
+import javassist.bytecode.AccessFlag
 import javassist.expr.ExprEditor
 import javassist.expr.MethodCall
 import java.io.File
@@ -35,9 +36,9 @@ class ClassFileMethodCallsTransformer(
         if (classfileBuffer == null) {
             return byteArrayOf()
         }
-        val oldToNewMethods = getOldToNewMethods(classNameWithDots) ?: return classfileBuffer
+        getOldToNewMethods(classNameWithDots) ?: return classfileBuffer
         logger.log(Level.INFO, "${logger.name}: Changing class $classNameWithDots: started")
-        val newClassfileBuffer = useJavassist(classNameWithDots, logger, classfileBuffer, oldToNewMethods)
+        val newClassfileBuffer = useJavassist(classNameWithDots, logger, classfileBuffer)
         logger.log(Level.INFO, "Changing class $classNameWithDots: finished")
         val file = File("src/main/resources/2/$className.class")
         file.parentFile.mkdirs()
@@ -46,22 +47,21 @@ class ClassFileMethodCallsTransformer(
     }
 
     private fun useJavassist(
-        classNameWithDots: String?, logger: Logger, classfileBuffer: ByteArray?,
-        oldToNewMethods: Map<Pair<String, List<String>>, String>
+        classNameWithDots: String?, logger: Logger, classfileBuffer: ByteArray?
     ): ByteArray {
         pool.insertClassPath(ByteArrayClassPath(classNameWithDots, classfileBuffer))
         val ctClass = pool[classNameWithDots]
+        ctClass.defrost()
         logger.log(Level.INFO, "Class ${ctClass.name} methods are: ${ctClass.declaredMethods.joinToString { method ->
             "${method.name}(${method.parameterTypes.joinToString { it.name }})"
         }}")
-        val methods = ctClass.declaredMethods.toList()
-        for (method in methods) {
-            oldToNewMethods[
-                    method.name to method.parameterTypes.map { it.name }
-            ] ?: continue
-            analyseMethod(method)
-        }
+        instrumentClass(ctClass)
         return ctClass.toBytecode()
+    }
+
+    private fun instrumentClass(ctClass: CtClass) {
+        ctClass.instrument(NewExprEditor(classesToOldToNewMethods))
+        ctClass.nestedClasses.forEach { instrumentClass(it) }
     }
 
     private class NewExprEditor(
@@ -70,15 +70,22 @@ class ClassFileMethodCallsTransformer(
         override fun edit(m: MethodCall) {
             val oldToNewMethods = classesToOldToNewMethods[m.className]
             if (oldToNewMethods != null) {
+                println("className = ${m.className}")
                 val newMethodName = oldToNewMethods[m.methodName to m.method.parameterTypes.map { it.name }]
                 if (newMethodName != null) {
-                    m.replace("\$_ = $0.$newMethodName($$);")
+                    val isStatic = m.method.methodInfo.accessFlags.and(AccessFlag.STATIC) != 0
+                    println("oldMethodName = ${m.methodName}, returnType = ${m.method.returnType.name}")
+                    val call = if (isStatic)
+                        "${m.className}.$newMethodName($$);"
+                    else
+                        "\$0.$newMethodName($$);"
+                    val replaceStr = if (m.method.returnType.name == "void")
+                        call
+                    else "\$_ = $call;"
+                    m.replace(replaceStr)
+                    println("newMethodName = $newMethodName")
                 }
             }
         }
-    }
-
-    private fun analyseMethod(method: CtMethod) {
-        method.instrument(NewExprEditor(classesToOldToNewMethods))
     }
 }

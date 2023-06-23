@@ -3,19 +3,19 @@ library example2;
 
 import "java";
 
-type codeExamples.libExamples.example2.Class1 {
+type codeExamples.libExamples.kotlin.example2.Class1 {
     name: java.lang.String;
     s: java.lang.String;
     limit: int;
     i: int;
 }
 
-type codeExamples.libExamples.example2.Class2 {
+type codeExamples.libExamples.kotlin.example2.Class2 {
     name: java.lang.String;
     id: int;
 }
 
-automaton codeExamples.libExamples.example2.Class1 (val arg0: java.lang.String) : codeExamples.libExamples.example2.Class1 {
+automaton codeExamples.libExamples.kotlin.example2.Class1 (val arg0: java.lang.String) : codeExamples.libExamples.kotlin.example2.Class1 {
     val name: java.lang.String;
     val s: java.lang.String;
     val limit: int;
@@ -34,13 +34,13 @@ automaton codeExamples.libExamples.example2.Class1 (val arg0: java.lang.String) 
         assigns i;
     }
     
-    fun incrementI(arg0: codeExamples.libExamples.example2.Class2): void;
+    fun incrementI(arg0: codeExamples.libExamples.kotlin.example2.Class2): void;
     
-    fun setI(arg0: int): codeExamples.libExamples.example2.Class2 {
+    fun setI(arg0: int): codeExamples.libExamples.kotlin.example2.Class2 {
         assigns i;
     }
     
-    fun setIToNull(): codeExamples.libExamples.example2.Class1 {
+    fun setIToNull(): codeExamples.libExamples.kotlin.example2.Class1 {
         assigns i;
     }
     
@@ -48,7 +48,7 @@ automaton codeExamples.libExamples.example2.Class1 (val arg0: java.lang.String) 
         assigns s;
     }
 }
-automaton codeExamples.libExamples.example2.Class2 (val arg0: int) : codeExamples.libExamples.example2.Class2 {
+automaton codeExamples.libExamples.kotlin.example2.Class2 (val arg0: int) : codeExamples.libExamples.kotlin.example2.Class2 {
     val name: java.lang.String;
     val id: int;
     fun getId(): int;

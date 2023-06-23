@@ -1,6 +1,7 @@
 package libsl.instrumentation.dynamic
 
 import javassist.*
+import javassist.bytecode.AccessFlag
 import java.io.File
 import java.lang.instrument.ClassFileTransformer
 import java.security.ProtectionDomain
@@ -85,8 +86,8 @@ class ClassFileAddMethodsTransformer(
     private fun getLogCommand(
         classNameWithDots: String, oldMethodName: String, method: CtMethod, argNames: Array<String>
     ): String {
-        val isStatic = method.methodInfo.isStaticInitializer.toString()
-        val id = if (method.methodInfo.isStaticInitializer) "0" else "$0.hashCode()"
+        val isStatic = method.methodInfo.accessFlags.and(AccessFlag.STATIC) != 0
+        val id = if (isStatic) "0" else "$0.hashCode()"
         val params = method.parameterTypes.withIndex().joinToString {
             "${argNames[it.index]}: ${it.value.name}${""/*= \" + $${it.index + 1}.hashCode() + \"*/}"
         }

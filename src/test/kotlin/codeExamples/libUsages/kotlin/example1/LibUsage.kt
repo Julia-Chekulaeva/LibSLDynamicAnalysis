@@ -1,7 +1,7 @@
-package codeExamples.libUsages.example1
+package codeExamples.libUsages.kotlin.example1
 
-import codeExamples.libExamples.example1.Class1
-import codeExamples.libExamples.example1.Class2
+import codeExamples.libExamples.kotlin.example1.Class1
+import codeExamples.libExamples.kotlin.example1.Class2
 
 fun use1(cycles: Int) {
     println("External call: function Class1.bar()")
