@@ -26,6 +26,11 @@ class GraphTests {
         analyseLogsExample(3)
     }
 
+    @Test
+    fun analyseLogs4() {
+        analyseLogsExample(4)
+    }
+
     private fun analyseLogsExample(exampleIndex: Int) {
         val dir = File("src/test/resources/example/")
         val analyseLogs = AnalyseLogs(
