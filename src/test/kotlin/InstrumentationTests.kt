@@ -1,53 +1,34 @@
-import instrumentStatic.KotlinInstrumentation
-import org.jetbrains.research.libsl.LibSL
 import org.junit.jupiter.api.Test
-import java.io.File
+
+const val lslPath = "src/test/resources/lslFiles/"
 
 class InstrumentationTests {
 
-    private fun getLslPath(example: Int) = "src/test/resources/example$example/"
-
-    private fun getLslFileName(example: Int) = "lslFile$example.lsl"
-
-    private fun getLibrary(example: Int) =
-        LibSL(getLslPath(example)).loadFromFileName(getLslFileName(example))
-
-    private fun instrumentationTestForExample(exampleIndex: Int) {
-        val kotlinInstrumentation = KotlinInstrumentation(getLibrary(exampleIndex))
-        val fileLogger = File(
-            "src/test/kotlin/codeExamples/example$exampleIndex/libExample_modified/Logger.kt"
-        )
-        fileLogger.parentFile.mkdirs()
-        val libUsageFile = File(
-            "src/test/kotlin/codeExamples/example$exampleIndex/libUsage_modified/LibUsage.kt"
-        )
-        libUsageFile.parentFile.mkdirs()
-        kotlinInstrumentation.createModifiedLibFiles(
-            "src/test/kotlin", "codeExamples.example$exampleIndex.libExample_modified",
-            "codeExamples.example$exampleIndex.libExample"
-        )
-        kotlinInstrumentation.replaceStringInFileAndCopyToAnotherFile(
-            File("src/main/resources/instrumentation/Logger.kt"), fileLogger,
-            "instrumentation/static", "codeExamples.example$exampleIndex.libExample_modified"
-        )
-        kotlinInstrumentation.replaceStringInFileAndCopyToAnotherFile(
-            fileLogger, fileLogger, "example/logExample", "example$exampleIndex/logExample$exampleIndex"
-        )
-        kotlinInstrumentation.replaceStringInFileAndCopyToAnotherFile(
-            File("src/test/kotlin/codeExamples/example$exampleIndex/libUsage/LibUsage.kt"), libUsageFile,
-            "codeExamples.example$exampleIndex.libUsage",
-            "codeExamples.example$exampleIndex.libUsage_modified"
-        )
-        kotlinInstrumentation.replaceStringInFileAndCopyToAnotherFile(
-            libUsageFile, libUsageFile, "codeExamples.example$exampleIndex.libExample",
-            "codeExamples.example$exampleIndex.libExample_modified"
-        )
+    @Test
+    fun test1() {
+        println("Test 1 started")
+        codeExamples.libUsages.kotlin.example1.main()
+        println("Test 1 finished")
     }
 
     @Test
-    fun instrumentationTest() {
-        instrumentationTestForExample(1)
-        instrumentationTestForExample(2)
-        instrumentationTestForExample(3)
+    fun test2() {
+        println("Test 2 started")
+        codeExamples.libUsages.kotlin.example2.main()
+        println("Test 2 finished")
+    }
+
+    @Test
+    fun test3() {
+        println("Test 3 started")
+        codeExamples.libUsages.kotlin.example3.main()
+        println("Test 3 finished")
+    }
+
+    @Test
+    fun test4() {
+        println("Test 4 started")
+        codeExamples.libUsages.java.example4.LibUsage.main(arrayOf())
+        println("Test 4 finished")
     }
 }

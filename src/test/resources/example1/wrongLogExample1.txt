@@ -1,9 +1,9 @@
-METHOD_CALL; class_name: codeExamples.example1.libExample.Class1; method_name: foo; parameters: (a: Int = 2, b: String = 1338649477); return_type: String; object_id: 1858609436; time: 1686756697673;
-METHOD_CALL; class_name: codeExamples.example1.libExample.Class1; method_name: bar; parameters: (); return_type: codeExamples.example1.libExample.Class1; object_id: 655381473; time: 1686756697886;
-METHOD_CALL; class_name: codeExamples.example1.libExample.Class1; method_name: bar; parameters: (); return_type: codeExamples.example1.libExample.Class1; object_id: 655381473; time: 1686756697887;
-METHOD_CALL; class_name: codeExamples.example1.libExample.Class2; method_name: writeS; parameters: (newS: String = 1845188065); return_type: kotlin.Unit; object_id: 789219251; time: 1686756698354;
-METHOD_CALL; class_name: codeExamples.example1.libExample.Class2; method_name: writeS; parameters: (newS: String = 1845188065); return_type: kotlin.Unit; object_id: 789219251; time: 1686756698355;
-METHOD_CALL; class_name: codeExamples.example1.libExample.Class2; method_name: writeS; parameters: (newS: String = 1845188065); return_type: kotlin.Unit; object_id: 789219251; time: 1686756698356;
-METHOD_CALL; class_name: codeExamples.example1.libExample.Class2; method_name: writeS; parameters: (inst: codeExamples.example1.libExample.Class1 = 233996206); return_type: kotlin.Unit; object_id: 789219251; time: 1686756698454;
-METHOD_CALL; class_name: codeExamples.example1.libExample.Class2; method_name: writeS; parameters: (inst: codeExamples.example1.libExample.Class1 = 233996206); return_type: kotlin.Unit; object_id: 789219251; time: 1686756698455;
-METHOD_CALL; class_name: codeExamples.example1.libExample.Class2; method_name: writeS; parameters: (inst: codeExamples.example1.libExample.Class1 = 233996206); return_type: kotlin.Unit; object_id: 789219251; time: 1686756698456;
+METHOD_CALL; class_name: codeExamples.libExamples.example1.Class1; method_name: foo; parameters: (a: Int = 2, b: String = 1338649477); return_type: String; object_id: 1858609436; time: 1686756697673;
+METHOD_CALL; class_name: codeExamples.libExamples.example1.Class1; method_name: bar; parameters: (); return_type: codeExamples.libExamples.example1.Class1; object_id: 655381473; time: 1686756697886;
+METHOD_CALL; class_name: codeExamples.libExamples.example1.Class1; method_name: bar; parameters: (); return_type: codeExamples.libExamples.example1.Class1; object_id: 655381473; time: 1686756697887;
+METHOD_CALL; class_name: codeExamples.libExamples.example1.Class2; method_name: writeS; parameters: (newS: String = 1845188065); return_type: kotlin.Unit; object_id: 789219251; time: 1686756698354;
+METHOD_CALL; class_name: codeExamples.libExamples.example1.Class2; method_name: writeS; parameters: (newS: String = 1845188065); return_type: kotlin.Unit; object_id: 789219251; time: 1686756698355;
+METHOD_CALL; class_name: codeExamples.libExamples.example1.Class2; method_name: writeS; parameters: (newS: String = 1845188065); return_type: kotlin.Unit; object_id: 789219251; time: 1686756698356;
+METHOD_CALL; class_name: codeExamples.libExamples.example1.Class2; method_name: writeS; parameters: (inst: codeExamples.libExamples.example1.Class1 = 233996206); return_type: kotlin.Unit; object_id: 789219251; time: 1686756698454;
+METHOD_CALL; class_name: codeExamples.libExamples.example1.Class2; method_name: writeS; parameters: (inst: codeExamples.libExamples.example1.Class1 = 233996206); return_type: kotlin.Unit; object_id: 789219251; time: 1686756698455;
+METHOD_CALL; class_name: codeExamples.libExamples.example1.Class2; method_name: writeS; parameters: (inst: codeExamples.libExamples.example1.Class1 = 233996206); return_type: kotlin.Unit; object_id: 789219251; time: 1686756698456;

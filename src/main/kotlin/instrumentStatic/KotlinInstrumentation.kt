@@ -4,7 +4,8 @@ import logAnalysis.LogType
 import org.jetbrains.research.libsl.nodes.Function
 import org.jetbrains.research.libsl.nodes.FunctionArgument
 import org.jetbrains.research.libsl.nodes.Library
-import org.jetbrains.research.libsl.nodes.VariableWithInitialValue
+import org.jetbrains.research.libsl.nodes.references.TypeReference
+import org.jetbrains.research.libsl.type.StructuredType
 import java.io.File
 
 class KotlinInstrumentation(private val library: Library) {
@@ -32,13 +33,15 @@ class KotlinInstrumentation(private val library: Library) {
             val oldFullClassName = type.fullName
             val infoAboutClass = infoByClassName[oldFullClassName] ?: continue
             val constructorVars = automaton.constructorVariables
-            val constructorParams = constructorVars.joinToString { "${it.name}: ${it.typeReference.name}" }
-            val paramNames = constructorVars.joinToString { it.name }
+            val constructorParams = constructorVars.joinToString {
+                "${it.name}${constructorVars.indexOf(it)}: ${it.typeReference.resolve()?.fullName ?: "Any"}"
+            }
+            val paramNames = constructorVars.joinToString { "${it.name}${constructorVars.indexOf(it)}" }
             val constructorParamInst = "val ${infoAboutClass.instName}: $oldFullClassName"
             val instFromParams = "$oldFullClassName($paramNames)"
-            val fields = automaton.internalVariables
+            val fields = (type as StructuredType).entries
             val functions = automaton.functions
-            val classText = getClassText(
+            val classText = getClassTextKt(
                 infoAboutClass, constructorParams, constructorParamInst,
                 instFromParams, fields, functions, newPackageName, oldPackageName
             )
@@ -46,58 +49,61 @@ class KotlinInstrumentation(private val library: Library) {
             val file = File(
                 "${directoryPath}/${infoAboutClass.newFullClassName.replace(".", "/")}.kt"
             )
+            file.parentFile.mkdirs()
             file.createNewFile()
             file.writeText(classText)
         }
     }
 
-    private fun getClassText(
+    private fun getClassTextKt(
         infoAboutClass: InfoAboutClass, constructorParams: String, constructorParamInst: String,
-        instFromParams: String, fields: List<VariableWithInitialValue>, functions: List<Function>,
+        instFromParams: String, fields: Map<String, TypeReference>, functions: List<Function>,
         newPackageName: String, oldPackageName: String
     ) = """package ${infoAboutClass.newFullClassName.removeSuffix(".${infoAboutClass.shortClassName}")}
                 |
                 |class ${infoAboutClass.shortClassName}($constructorParamInst) {
                 |   constructor($constructorParams) : this($instFromParams)
                 |${
-            fields.joinToString(System.lineSeparator()) {
-                val name = it.name // ! Incorrect !
-                """
-                            |   var $name = ${infoAboutClass.instName}.$name""".trimMargin()
-            }
-        }
+        fields.map {
+            val name = it.key
+            """
+                    |   var $name = ${infoAboutClass.instName}.$name""".trimMargin()
+        }.joinToString(System.lineSeparator()) { it }
+    }
                 |${
-            functions.joinToString(System.lineSeparator()) { function ->
-                val funName = function.name
-                val args = function.args
-                val returnType = function.returnType?.name ?: Unit.javaClass.canonicalName
-                val returnTypeModified = if (infoByClassName.containsKey(returnType))
-                    "$newPackageName${returnType.removePrefix(oldPackageName)}"
-                else returnType
-                """
+        functions.joinToString(System.lineSeparator()) { function ->
+            val funName = function.name
+            val args = function.args
+            val returnType = function.returnType?.name ?: Unit.javaClass.canonicalName
+            val returnTypeModified = if (infoByClassName.containsKey(returnType))
+                "$newPackageName${returnType.removePrefix(oldPackageName)}"
+            else returnType
+            """
                             |   fun $funName(${
-                    args.joinToString {
-                        val argTypeName = it.typeReference.name
-                        "${it.name}: ${infoByClassName[argTypeName]?.newFullClassName ?: argTypeName}"
-                    }
-                }): $returnTypeModified {""".trimMargin() +
-                        generateLogCommand(LogType.METHOD_STARTED, infoAboutClass, funName, args, returnType) + """
-                            |       val result = ${infoAboutClass.instName}.$funName(${args.joinToString { argument ->
-                            "${argument.name}${
-                                if (infoByClassName.containsKey(argument.typeReference.name))
-                                    ".${infoByClassName[argument.typeReference.name]?.instName}"
-                                else ""
-                            }"
-                        }})""".trimMargin() + 
-                        generateLogCommand(LogType.METHOD_FINISHED, infoAboutClass, funName, args, returnType) + """
-                            |       return ${
-                            if (returnType != returnTypeModified)
-                                "$returnTypeModified(result)"
-                            else "result"
-                        }
-                            |   }""".trimMargin()
-                    }
+                args.joinToString {
+                    val argTypeName = it.typeReference.name
+                    "${it.name}: ${infoByClassName[argTypeName]?.newFullClassName ?: argTypeName}"
                 }
+            }): $returnTypeModified {""".trimMargin() +
+                    generateLogCommand(LogType.METHOD_STARTED, infoAboutClass, funName, args, returnType) + """
+                            |       val result = ${infoAboutClass.instName}.$funName(${
+                args.joinToString { argument ->
+                    "${argument.name}${
+                        if (infoByClassName.containsKey(argument.typeReference.name))
+                            ".${infoByClassName[argument.typeReference.name]?.instName}"
+                        else ""
+                    }"
+                }
+            })""".trimMargin() +
+                    generateLogCommand(LogType.METHOD_FINISHED, infoAboutClass, funName, args, returnType) + """
+                            |       return ${
+                if (returnType != returnTypeModified)
+                    "$returnTypeModified(result)"
+                else "result"
+            }
+                            |   }""".trimMargin()
+        }
+    }
                 |}
                 |
                 |""".trimMargin()

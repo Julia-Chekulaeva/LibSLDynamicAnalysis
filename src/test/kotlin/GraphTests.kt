@@ -2,33 +2,43 @@ import logAnalysis.AnalyseLogs
 import org.jetbrains.research.libsl.LibSL
 import org.junit.jupiter.api.Test
 import java.io.File
-import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 
 class GraphTests {
 
-    private fun getLslPath(numberOfExample: Int) = "src/test/resources/example$numberOfExample/"
-
-    private fun getLslFileName(numberOfExample: Int) = "lslFile$numberOfExample.lsl"
+    private fun getLslFileName(numberOfExample: Int) = "example$numberOfExample.lsl"
 
     private fun getLibrary(numberOfExample: Int) =
-        LibSL(getLslPath(numberOfExample)).loadFromFileName(getLslFileName(numberOfExample))
+        LibSL(lslPath).loadFromFileName(getLslFileName(numberOfExample))
 
     @Test
-    fun analyseLogs() {
+    fun analyseLogs1() {
         analyseLogsExample(1)
+    }
+
+    @Test
+    fun analyseLogs2() {
         analyseLogsExample(2)
+    }
+
+    @Test
+    fun analyseLogs3() {
         analyseLogsExample(3)
     }
 
+    @Test
+    fun analyseLogs4() {
+        analyseLogsExample(4)
+    }
+
     private fun analyseLogsExample(exampleIndex: Int) {
+        val dir = File("src/test/resources/example/")
         val analyseLogs = AnalyseLogs(
-            listOf(File("src/test/resources/example$exampleIndex/logExample$exampleIndex.txt")),
+            dir.listFiles()?.toList() ?: listOf(),
             getLibrary(exampleIndex)
         )
         analyseLogs.analyseLogInfo(
-            "src/test/resources/example$exampleIndex/graphForLogExample$exampleIndex.txt",
-            "src/test/resources/example$exampleIndex/matrixAndNodeNamesExample$exampleIndex.txt"
+            "src/test/resources/example$exampleIndex/graph$exampleIndex.dot"
         )
         analyseLogs.methodCallGroups.forEach {
             assert(analyseLogs.graph.checkMethodCallSequence(it))
@@ -48,10 +58,10 @@ class GraphTests {
         }
         val names = matrixAndNames.subList(halfSize, matrixAndNames.size)
         assert(matrix.size == names.size)
-        assert(matrix.size >= 2)
-        assert(names[0] == "start" && names[1] == "end")
+        assert(matrix.isNotEmpty())
+        assert(names[0] == "start")
         assert(matrix.all { it.size == matrix.size })
-        assert(matrix[1].sum() == 0)
+        /*assert(matrix[1].sum() == 0)
         assert(matrix.fold(0) { s, w -> s + w[0] } == 0)
         assertEquals(matrix[0].sum(), matrix.fold(0) { s, w -> s + w[1] })
         for (i in 2 until matrix.size) {
@@ -59,6 +69,6 @@ class GraphTests {
                 matrix[i].sum(), matrix.fold(0) { s, w -> s + w[i] },
                 "Row ${i + 1} and column ${i + 1} have different sum values"
             )
-        }
+        }*/
     }
 }

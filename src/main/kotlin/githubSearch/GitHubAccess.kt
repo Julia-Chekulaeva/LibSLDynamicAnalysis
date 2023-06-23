@@ -1,6 +1,5 @@
 package githubSearch
 
-import instrumentStatic.modifyCode
 import org.kohsuke.github.*
 import java.io.File
 
@@ -17,7 +16,13 @@ const val qLanguage = "gradle"
 const val timeLimitMillis = 60_000
 const val timeStepMillis = 5000L
 
-class GitHubAccess(propertyFileName: String) {
+class GitHubException(override val message: String) : Exception()
+
+class GitHubAccess(
+    propertyFileName: String,
+    private val lslLocalPath: String,
+    private val lslLocalFileName: String
+    ) {
 
     private val forkedRepos = mutableListOf<GHRepository>()
 
@@ -45,8 +50,10 @@ class GitHubAccess(propertyFileName: String) {
         forkedRepos.clear()
     }
 
-    private fun searchContent(libName: String, size: Int) =
-        gitHub.searchContent().q(libName).size("<$size").language(qLanguage).list()
+    private fun searchContent(libName: String, size: Int): PagedSearchIterable<GHContent> {
+        val result = gitHub.searchContent().q(libName).language(qLanguage)
+        return result.size("<$size").list()
+    }
 
     private fun searchForkAndEditRepos(libName: String) {
         println("""Myself: ${gitHub.myself.htmlUrl}
@@ -55,6 +62,7 @@ class GitHubAccess(propertyFileName: String) {
         var size = 0
         var step = 1
         val maxStepsWithoutIncrement = 20
+        val maxFilesCount = 1
         var searchResult = searchContent(libName, size).toList()
         var stepsWithoutIncrement = 0
         try {
@@ -63,22 +71,37 @@ class GitHubAccess(propertyFileName: String) {
                 size += step
                 Thread.sleep(1000L)
                 val searchContent = searchContent(libName, size)
-                println("File size: $size\tFiles found: ${searchContent.totalCount}")
+                println("File size: $size\tTotal count: ${searchContent.totalCount}")
                 searchResult = searchContent.toList()
+                println("Files found: ${searchResult.size}")
+                if (searchResult.size > maxFilesCount) {
+                    throw GitHubException(
+                        "Too many files found: $prevFilesFound"
+                    )
+                }
                 if (searchResult.size > prevFilesFound)
                     stepsWithoutIncrement = 0
-                else if (searchResult.size == prevFilesFound)
+                else if (searchResult.size == prevFilesFound) {
                     stepsWithoutIncrement++
+                    if (prevFilesFound * stepsWithoutIncrement > 200)
+                        throw GitHubException(
+                            "Too many steps without changing " +
+                                    "(steps count: $stepsWithoutIncrement, files found: $prevFilesFound)"
+                        )
+                }
                 else {
                     size -= step
                     val prevSearchContent = searchContent(libName, size)
                     println("File size: $size\tFiles found: ${prevSearchContent.totalCount}")
                     searchResult = prevSearchContent.toList()
-                    throw Exception("File size started to decrease")
+                    throw GitHubException(
+                        "File size started to decrease" +
+                            "(steps count: $stepsWithoutIncrement, files found: $prevFilesFound)"
+                    )
                 }
                 if (stepsWithoutIncrement >= maxStepsWithoutIncrement)
-                    throw Exception("No more files found on last $stepsWithoutIncrement steps")
-                step = size
+                    throw GitHubException("No more files found on last $stepsWithoutIncrement steps")
+                step = size * 2
             }
         } catch (e: Exception) {
             println(e.localizedMessage)
@@ -116,17 +139,25 @@ class GitHubAccess(propertyFileName: String) {
             println("""Repo ${repo.name} is renamed to ${repo.name}-$i
                 |""".trimMargin())
         }
-        repo.fork()
-        val myRepo = gitHub.myself.getRepository(repo.name)
+        val myRepo = repo.fork()
         println("""${repo.htmlUrl}
             |Forked: ${myRepo.htmlUrl}
             |""".trimMargin())
         forkedRepos.add(myRepo)
-        editForkedRepo(myRepo)
+        try {
+            editForkedRepo(myRepo)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     private fun editForkedRepo(myRepo: GHRepository) {
-        editSourceCodeFiles(myRepo)
+        sourceCodeFilesDynamicInstrumentation(myRepo)
+        addGHActionsFile(myRepo)
+        myRepo.listWorkflows().forEach { it.enable() }
+    }
+
+    private fun addGHActionsFile(myRepo: GHRepository) {
         val ghActionsFile = File("$resourcesPath/$gitHubActionsFile")
         var index = 0
         var actionsFileName = gitHubActionsFile
@@ -141,22 +172,60 @@ class GitHubAccess(propertyFileName: String) {
         }
         myRepo.createContent().content(ghActionsFile.readText()).path(actionsFileName)
             .message("Add $actionsFileName file").commit()
-        myRepo.listWorkflows().forEach { it.enable() }
     }
 
-    private fun editSourceCodeFiles(myRepo: GHRepository) {
-        val files = myRepo.getDirectoryContent("").toMutableList()
-        while (files.isNotEmpty()) {
-            val file = files.removeAt(0)
-            if (file.isDirectory) {
-                files.addAll((myRepo.getDirectoryContent(file.path).toMutableList()))
-            } else if (file.name.endsWith(".java")) {
-                file.update(modifyCode(file.read().toString()), "Modify ${file.path} file")
+    private fun sourceCodeFilesDynamicInstrumentation(myRepo: GHRepository) {
+        addJarAgent(1, myRepo)
+        addJarAgent(2, myRepo)
+        val lslLocalFile = File("$lslLocalPath$lslLocalFileName")
+        val lslFilePathForGitHub = lslLocalFile.absolutePath
+        val configFileName = "src/main/resources/config"
+        val configContent = """
+            |lslPath="$lslLocalPath"
+            |lslFileName="$lslLocalFileName"
+        """.trimMargin()
+        myRepo.createContent().path(lslFilePathForGitHub).content(lslLocalFile.readText())
+            .message("Add $lslLocalFileName file").commit()
+        myRepo.createContent().path(configFileName).content(configContent)
+            .message("Add $configFileName file").commit()
+        modifyGradleFiles(myRepo.getFileContent(""))
+    }
+
+    private fun addJarAgent(index: Int, myRepo: GHRepository) {
+        val agentJarName = "InstrumentAgent$index-1.0-SNAPSHOT.jar"
+        val agentJarPath = "InstrumentAgent$index${File.separator}build${File.separator}libs${File.separator}$agentJarName"
+        val jarFile = File(agentJarPath)
+        myRepo.createContent().path(agentJarName).content(jarFile.readBytes())
+            .message("Add $agentJarName file").commit()
+    }
+
+    private fun modifyGradleFiles(gradleFile: GHContent) {
+        if (gradleFile.isDirectory) {
+            for (file in gradleFile.listDirectoryContent()) {
+                modifyGradleFiles(file)
             }
+        } else if (gradleFile.name.endsWith(".gradle.kts")) {
+            gradleFile.update(
+                gradleFile.read().toString() + """
+                        |
+                        |dependencies {
+                        |    implementation("com.github.vldf:libsl:4a5d678")
+                        |    implementation("org.javassist:javassist:3.29.2-GA")
+                        |}
+                        |
+                        |tasks.test {
+                        |    jvmArgs = mutableListOf(
+                        |        "-javaagent:InstrumentAgent1-1.0-SNAPSHOT.jar",
+                        |        "-javaagent:InstrumentAgent2-1.0-SNAPSHOT.jar",
+                        |    )
+                        |}
+                    """.trimMargin(),
+                "Modify ${gradleFile.name} file"
+            )
         }
     }
 
-    private fun checkJobStatusAndLoadLogs(myRepo: GHRepository): Boolean {
+    fun checkJobStatusAndLoadLogs(myRepo: GHRepository): Boolean {
         val workflows = myRepo.listWorkflows().toList().filter { it.name == workflowName }
         if (workflows.isEmpty())
             return false
